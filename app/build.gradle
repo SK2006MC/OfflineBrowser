@@ -9,7 +9,7 @@ android {
         applicationId "com.sk.web6"
         versionCode 1
         targetSdkVersion 33
-        minSdkVersion 24
+        minSdkVersion 21
         versionName "1.0"
 	
     }
