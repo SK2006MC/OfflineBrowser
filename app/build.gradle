@@ -3,15 +3,12 @@ plugins {
 }
 
 android {
-		namespace "com.sk.web6"
-    compileSdkVersion 27 // Or your target SDK version
-         // Or your minimum SDK version
-        // Or your target SDK version
-
+	namespace "com.sk.web6"
+	compileSdkVersion 33
     defaultConfig {
-        applicationId "com.sk.web6" // Your package name
+        applicationId "com.sk.web6"
         versionCode 1
-        targetSdkVersion 27
+        targetSdkVersion 33
         minSdkVersion 24
         versionName "1.0"
 	
