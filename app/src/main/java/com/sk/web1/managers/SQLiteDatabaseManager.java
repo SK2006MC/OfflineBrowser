@@ -9,8 +9,8 @@ import android.net.Uri;
 import android.util.Log;
 
 import java.io.File;
-
 import java.util.ArrayList;
+
 import okhttp3.Headers;
 
 public class SQLiteDatabaseManager implements DatabaseManager {
@@ -113,8 +113,8 @@ public class SQLiteDatabaseManager implements DatabaseManager {
             Log.e("DatabaseError", e.toString());
         }
     }
-    //Implement other methods of interface DatabaseManager
     
+    @Override
     public ArrayList<String> getDownloadedUrls() {
         ArrayList<String> urls = new ArrayList<>();
         try (Cursor cursor = db.query(TABLE_URLS, new String[]{KEY_URL}, null, null, null, null, null)) {
@@ -127,8 +127,8 @@ public class SQLiteDatabaseManager implements DatabaseManager {
         return urls;
     }
 
-    
-    public void saveUrlToDownload(Uri uri) {
+    @Override
+    public void setNonDownloadedUrl(Uri uri) {
         ContentValues values = new ContentValues();
         values.put(KEY_HOST,uri.getHost());
         values.put(KEY_URL,uri.toString());
@@ -139,8 +139,8 @@ public class SQLiteDatabaseManager implements DatabaseManager {
         }
     }
 
-    
-    public void removeUrlToDownload(String url) {
+    @Override
+    public void removeUrl(String url) {
         try{
             db.delete("download_queue",KEY_URL+"=?",new String[]{url});
         }catch (Exception e){

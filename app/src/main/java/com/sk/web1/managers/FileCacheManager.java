@@ -56,7 +56,7 @@ public class FileCacheManager implements CacheManager {
 
     if (localFile.exists()) {
       if (sm.getKeepUptodate() && network.isInternetAvailable(main)) {
-        try {¹
+        try {
           Headers headers = getHeadersFromDb(uri);
           Request okHttpRequest =
               new Request.Builder()
@@ -81,10 +81,9 @@ public class FileCacheManager implements CacheManager {
       downloadFile(uri, localFile, null);
       return loadFromLocal(localFile);
     }else{
-      databaseManager.saveUrlToDownload(uri);
+      databaseManager.setNonDownloadedUrl(uri);
       return null;
     }
-    return null;
   }
 
   private Headers getHeadersFromDb(Uri uri) {
@@ -145,7 +144,7 @@ public class FileCacheManager implements CacheManager {
 
           @Override
           public void onFailure(String error) {
-          databaseManager.saveUrlToDownload(uri);
+          databaseManager.setNonDownloadedUrl(uri);
             // Handle download failure (e.g., show error message)
           }
         });
