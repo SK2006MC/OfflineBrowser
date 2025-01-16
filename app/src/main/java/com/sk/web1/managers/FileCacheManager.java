@@ -56,7 +56,7 @@ public class FileCacheManager implements CacheManager {
 
     if (localFile.exists()) {
       if (sm.getKeepUptodate() && network.isInternetAvailable(main)) {
-        try {
+        try {¹
           Headers headers = getHeadersFromDb(uri);
           Request okHttpRequest =
               new Request.Builder()
@@ -75,9 +75,8 @@ public class FileCacheManager implements CacheManager {
           Log.d("fileCacheManager", e.toString());
           // Handle exception, proceed with regular download
         }
-      } else {
-        return loadFromLocal(localFile);
       }
+      return loadFromLocal(localFile);
     } else if(network.isInternetAvailable(main)) {
       downloadFile(uri, localFile, null);
       return loadFromLocal(localFile);
@@ -94,13 +93,17 @@ public class FileCacheManager implements CacheManager {
   }
 
   private String buildLocalPath(Uri uri) {
+  	String last = uri.getLastPathSegment();
     String localPathT = rootPath + '/' + uri.getHost() + uri.getEncodedPath();
-    if (uri.getLastPathSegment() != null && !uri.getLastPathSegment().contains(".")) {
-      return uri.toString().endsWith("/") ? localPathT + "index.html" : localPathT + "/index.html";
-    } else if (uri.getLastPathSegment() == null) {
+    
+    if (last == null) {
       return localPathT + "index.html";
+    }
+    
+    if (last.contains(".")) {
+    	return localPathT;
     } else {
-      return localPathT;
+      return uri.toString().endsWith("/") ? localPathT + "index.html" : localPathT + "/index.html";
     }
   }
 
