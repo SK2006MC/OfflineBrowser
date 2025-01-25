@@ -28,13 +28,13 @@ public class MainActivity extends AppCompatActivity {
     
     suggestions = new ArrayList<String>();
     binding = MainBinding.inflate(getLayoutInflater());
+    main = this;
     
     sm = new SettingsManager(this);
     isFirstLaunched();
     setContentView(binding.getRoot());
     setupAutoCompleteTextView();
     setupWebView();
-    main = this;
     
   }
 
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     HttpDownloader downloader = new HttpDownloader(this, exeService, client);
     FileCacheManager cacheManager =
         new FileCacheManager(
-            main, sm, sm.getRootPath(), downloader, mimeTypeResolver, database, client, netUtils);
+            this, sm, sm.getRootPath(), downloader, mimeTypeResolver, database, client, netUtils);
 
     myWebView = binding.myWebView;
     CustomWebViewClient webViewClient = new CustomWebViewClient(cacheManager,suggestions);

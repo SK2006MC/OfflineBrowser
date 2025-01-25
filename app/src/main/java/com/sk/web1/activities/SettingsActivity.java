@@ -2,6 +2,8 @@ package com.sk.web1;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.content.Intent;
+
 import android.view.View;
 import android.widget.Toast;
 import com.sk.web1.databinding.ActivitySettingsBinding;
@@ -19,6 +21,9 @@ public class SettingsActivity extends Activity {
     storageManager = new MyStorageManager(this);
     sm = new SettingsManager(this);
     
+    binding.rootPath.setText(sm.getRootPath());
+    //binding.keepUptodate
+    
     binding.keepUptodate.setOnCheckedChangeListener((p,q)->{
       sm.setKeepUptodate(q);
     });
@@ -26,15 +31,23 @@ public class SettingsActivity extends Activity {
     binding.save.setOnClickListener((p)->{
       finish();
     });
+    
   }
 
   public void pickRootPath(View v) {
     storageManager.pickRootPath(
         folderPath -> {
-          binding.rootPath.setText(folderPath);
-          sm.setRootPath(folderPath);
-          Toast.makeText(this, folderPath, Toast.LENGTH_LONG).show();
+        	sm.setRootPath(folderPath);
+        	sm.done();
+          binding.rootPath.setText(sm.getRootPath());
+          Toast.makeText(this, sm.getRootPath(), Toast.LENGTH_LONG).show();
         });
+  }
+  
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    storageManager.onActivityResult(requestCode, resultCode, data);
   }
   
   @Override

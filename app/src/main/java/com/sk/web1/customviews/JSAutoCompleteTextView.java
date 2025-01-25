@@ -86,7 +86,7 @@ public class JSAutoCompleteTextView extends AutoCompleteTextView {
               if (pendingAutocompleteTask != null) {
                 handler.removeCallbacks(pendingAutocompleteTask);
               }
-
+              
               pendingAutocompleteTask = () -> updateAutocompleteSuggestions(s.toString());
               handler.postDelayed(pendingAutocompleteTask, DEBOUNCE_DELAY);
             }
@@ -101,7 +101,30 @@ public class JSAutoCompleteTextView extends AutoCompleteTextView {
     this.webView = webView;
     if (this.webView != null) {}
   }
-
+  
+  int countChar(String s,char t){
+  	int count=0;
+  	for(int i=0;i<s.length();i++){
+  		if(s.charAt(i)==t) count++;
+  	}
+  	return count;
+  }
+  
+	String jsCodeForAutoCompletion(String input){
+		String jsCode = "(function() { return Object.getOwnPropertyNames(window); })();";
+		if (!input.contains("=")&&input.contains(".")&&countChar(input,'"')%2==0&&countChar(input,'(')==countChar(input,')')) {
+	      int lastDotIndex = input.lastIndexOf(".");
+	      String objectName = input.substring(0, lastDotIndex);
+	      jsCode =
+	          "(function() { try { if ("
+	              + objectName
+	              + " !== null) { return Object.getOwnPropertyNames("
+	              + objectName
+	              + "); } else { return []; } } catch (e) { console.log(e);return []; } })();";
+    }
+    return jsCode;
+	}
+	
   private void updateAutocompleteSuggestions(String input) {
     if (webView == null || adapter == null) {
       Log.w(TAG, "WebView or Adapter is null. Skipping autocomplete update.");
@@ -109,19 +132,8 @@ public class JSAutoCompleteTextView extends AutoCompleteTextView {
     }
 
     String jsCode;
-    if (input.contains(".")) {
-      int lastDotIndex = input.lastIndexOf(".");
-      String objectName = input.substring(0, lastDotIndex);
-      jsCode =
-          "(function() { try { if ("
-              + objectName
-              + " !== null) { return Object.getOwnPropertyNames("
-              + objectName
-              + "); } else { return []; } } catch (e) { console.log(e);return []; } })();";
-    } else {
-      jsCode = "(function() { return Object.getOwnPropertyNames(window); })();";
-    }
-
+    jsCode = jsCodeForAutoCompletion(input);
+    
     webView.evaluateJavascript(
         jsCode,
         result -> {

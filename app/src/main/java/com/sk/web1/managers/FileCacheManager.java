@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.util.Log;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,6 +54,9 @@ public class FileCacheManager implements CacheManager {
     Uri uri = request.getUrl();
     String localPath = buildLocalPath(uri);
     File localFile = new File(localPath);
+
+    //Toast.makeText(main,uri.toString()+localPath,0).show();
+    Toast.makeText(main,"ghh",Toast.LENGTH_LONG).show();
 
     if (localFile.exists()) {
       if (sm.getKeepUptodate() && network.isInternetAvailable(main)) {
