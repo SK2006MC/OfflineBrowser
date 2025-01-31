@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class A2 extends AppCompatActivity {
+public class JSConsoleActivity extends AppCompatActivity {
 
   private static final String TAG = "MainActivity";
   private static final Pattern QUOTE_REMOVAL_PATTERN = Pattern.compile("^\"|\"$");
