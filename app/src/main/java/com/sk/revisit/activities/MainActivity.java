@@ -77,31 +77,19 @@ public class MainActivity extends AppCompatActivity {
 
     void initNavView(NavigationView navigationView) {
 		navigationView.setNavigationItemSelectedListener(item -> {
-            switch (item.getItemId()) {
-
-            case R.id.nav_about:
-                startMyActivity(AboutActivity.class);
-                break;
-
-            case R.id.nav_settings:
-                startMyActivity(SettingsActivity.class);
-                break;
-
-            case R.id.nav_dn:
-                startMyActivity(DownloadActivity.class);
-                break;
-
-            case R.id.nav_ud:
-                startMyActivity(UpdateActivity.class);
-                break;
-
-            case R.id.nav_web:
-                startMyActivity(WebpagesActivity.class);
-                break;
-
-
-            }
-            return false;
+            int id = item.getItemId();
+			if(id == R.id.nav_dn){
+				startMyActivity(DownloadActivity.class);
+			} else if (id==R.id.nav_ud) {
+				startMyActivity(UpdateActivity.class);
+			} else if (id==R.id.nav_settings) {
+				startMyActivity(SettingsActivity.class);
+			} else if (id==R.id.nav_about) {
+				startMyActivity(AboutActivity.class);
+			} else if (id==R.id.nav_web) {
+				startMyActivity(WebpagesActivity.class);
+			}
+			return false;
         });
 	}
 
