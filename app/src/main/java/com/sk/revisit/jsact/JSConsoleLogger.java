@@ -52,4 +52,8 @@ public class JSConsoleLogger {
             default: return ContextCompat.getColor(context, android.R.color.black);
         }
     }
+
+    public void logConsoleMessage(String r) {
+        logConsoleMessage(r, ConsoleMessage.MessageLevel.LOG);
+    }
 }

@@ -8,7 +8,6 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 /**
@@ -35,28 +34,18 @@ public class JSWebViewManager {
         webSettings.setDomStorageEnabled(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         webSettings.setAllowFileAccess(true);
-        /*
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
-        */
+        webSettings.setAllowContentAccess(true);
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                /*String formattedMessage =
-          		consoleMessage.message()
-              + ":at "
-              + consoleMessage.lineNumber()
-              + " in "
-              + consoleMessage.sourceId();*/
-              
-                //jsLogger.logConsoleMessage(formattedMessage,consoleMessage.messageLevel());
                 jsLogger.logConsoleMessage(consoleMessage);
                 return true;
             }
         });
 
-        webView.setWebViewClient(new WebViewClient());
         webView.addJavascriptInterface(webAppInterface, "Android");
         webView.loadUrl("file:///android_asset/index.html");
     }
@@ -73,12 +62,12 @@ public class JSWebViewManager {
 		      mContext = c;
 		      this.webview = webview;
 		    }
-		
+
 		    @JavascriptInterface
 		    public void showToast(String toast) {
 		      Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
 		    }
-		
+
 		    @JavascriptInterface
 		    public void loadUrl(String url) {
 		      webview.loadUrl(url);
