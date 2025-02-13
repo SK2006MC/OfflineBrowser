@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">OffWeb1</string>
+    <string name="app_name">Revisit</string>
+    <string name="enter_javascript_code">Enter JavaScript code</string>
+    <string name="execute_the_jscode">execute the jscode</string>
 </resources>

@@ -1,12 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:id="@+id/refresh"
-        android:title="Refresh" />
-    <item
-        android:id="@+id/settings"
-        android:title="Settings" />
-    <item
-        android:id="@+id/exit"
-        android:title="Exit" />
+
+    <item android:id="@+id/nav_web" android:title="WebPages"/>
+	<item android:id="@+id/nav_ud" android:title="UpdateUrls"/>
+    <item android:id="@+id/nav_dn" android:title="DownloadUrls"/>
+    <item android:id="@+id/nav_settings"  android:title="Settings"/>
+	<item android:id="@+id/nav_about"  android:title="About"/>
+
 </menu>
