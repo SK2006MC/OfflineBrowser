@@ -18,6 +18,7 @@
         android:id="@+id/size"/>
     <ProgressBar
         android:id="@+id/pb"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 </LinearLayout>

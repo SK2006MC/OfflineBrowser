@@ -3,7 +3,7 @@ package com.sk.revisit.data;
 import android.net.Uri;
 
 public class Url {
-  private String url;
+  private final String url;
   private boolean isDownloaded;
   private boolean isSelected;
   private boolean isUpdateAvailable;

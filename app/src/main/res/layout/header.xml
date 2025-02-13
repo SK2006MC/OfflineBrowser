@@ -13,13 +13,13 @@
         <ImageView
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:contentDescription="Profile Picture"
+            android:contentDescription="@string/profile_picture"
             android:src="@drawable/me" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Revisit"
+            android:text="@string/revisit"
             android:textColor="@android:color/white"
             android:textSize="18sp" />
     </LinearLayout>
@@ -28,6 +28,8 @@
         android:id="@+id/urlEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="url" />
+        android:autofillHints="google.com"
+        android:hint="@string/enter_a_url"
+        android:inputType="textUri" />
 
 </LinearLayout>

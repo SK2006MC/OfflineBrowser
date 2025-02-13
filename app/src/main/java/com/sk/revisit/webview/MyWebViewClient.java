@@ -4,7 +4,7 @@ import android.webkit.WebView;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebViewClient;
-import com.sk.revisit.managers.WebStorageManager;;
+import com.sk.revisit.managers.WebStorageManager;
 
 public class MyWebViewClient extends WebViewClient {
 	

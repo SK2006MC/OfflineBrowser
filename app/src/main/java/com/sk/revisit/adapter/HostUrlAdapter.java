@@ -1,9 +1,7 @@
 package com.sk.revisit.adapter;
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,34 +27,8 @@ public class HostUrlAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 		notifyDataSetChanged();
 	}
 
-	@NonNull
-	@Override
-	public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-		LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-		if (viewType == VIEW_TYPE_HOST) {
-			ItemHostBinding binding = ItemHostBinding.inflate(inflater, parent, false);
-			return new HostViewHolder(binding, this, presenter);
-		} else if (viewType == VIEW_TYPE_URL) {
-			ItemUrlBinding binding = ItemUrlBinding.inflate(inflater, parent, false);
-			return new UrlViewHolder(binding, this, presenter);
-		} else {
-			throw new IllegalArgumentException("Invalid view type: " + viewType);
-		}
-	}
 
-	@Override
-	public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-		Object item = getItem(position);
-		if (holder instanceof HostViewHolder && item instanceof Host) {
-			((HostViewHolder) holder).bind((Host) item, position);
-		} else if (holder instanceof UrlViewHolder && item instanceof Url) {
-			int hostPosition = getHostPositionForUrl(position);
-			int urlPositionInHost = getUrlPositionInHost(position, hostPosition);
-			((UrlViewHolder) holder).bind((Url) item, hostPosition, urlPositionInHost);
-		} else {
-			Log.e(TAG, "onBindViewHolder: Invalid view holder or item type at position " + position);
-		}
-	}
+
 
 	private int getHostPositionForUrl(int urlItemPosition) {
 		int hostItemCount = 0;
@@ -93,7 +65,18 @@ public class HostUrlAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 		return -1; // Should not happen in normal cases, but return -1 to indicate error if needed
 	}
 
-	@Override
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return null;
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+
+    }
+
+    @Override
 	public int getItemViewType(int position) {
 		Object item = getItem(position);
 		if (item instanceof Host) {
@@ -132,64 +115,5 @@ public class HostUrlAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 			}
 		}
 		return null;
-	}
-
-	// ViewHolder for Host items
-	public static class HostViewHolder extends RecyclerView.ViewHolder {
-		private final ItemHostBinding binding;
-		private final HostUrlAdapter adapter;
-
-
-		public HostViewHolder(ItemHostBinding binding, HostUrlAdapter adapter) {
-			super(binding.getRoot());
-			this.binding = binding;
-			this.adapter = adapter;
-
-		}
-
-		public void bind(Host host, int position) {
-			binding.hostNameTextView.setText(host.getName());
-			binding.hostCheckBox.setChecked(host.isSelected());
-
-			updateExpandCollapseIcon(host);
-
-			binding.getRoot().setOnClickListener(v -> presenter.onHostExpanded(position));
-
-			binding.hostCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> presenter.onHostSelectionChanged(position, isChecked));
-		}
-
-		private void updateExpandCollapseIcon(Host host) {
-			if (host.isExpanded()) {
-				binding.expandCollapseIcon.setImageResource(R.drawable.ic_expand_less);
-			} else {
-				binding.expandCollapseIcon.setImageResource(R.drawable.ic_expand_more);
-			}
-		}
-	}
-
-	// ViewHolder for URL items
-	public static class UrlViewHolder extends RecyclerView.ViewHolder {
-		private final ItemUrlBinding binding;
-		private final HostUrlAdapter adapter;
-		Presenter presenter;
-		
-		public UrlViewHolder(ItemUrlBinding binding, HostUrlAdapter adapter,Presenter presenter) {
-			super(binding.getRoot());
-			this.binding = binding;
-			this.adapter = adapter;
-		}
-
-		public void bind(Url url, int hostPosition, int urlPositionInHost) {
-			binding.urlTextView.setText(url.getUrl());
-			binding.urlCheckBox.setChecked(url.isSelected());
-
-			if (url.isUpdateAvailable()) {
-				binding.updateIndicatorImageView.setVisibility(View.VISIBLE);
-			} else {
-				binding.updateIndicatorImageView.setVisibility(View.GONE);
-			}
-
-			binding.urlCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> presenter.onUrlSelectionChanged(hostPosition, urlPositionInHost, isChecked));
-		}
 	}
 }

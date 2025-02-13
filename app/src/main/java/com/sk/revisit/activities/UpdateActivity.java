@@ -3,6 +3,8 @@ package com.sk.revisit.activities;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.sk.revisit.R;
+
 public class UpdateActivity extends AppCompatActivity{
 	
 	@Override

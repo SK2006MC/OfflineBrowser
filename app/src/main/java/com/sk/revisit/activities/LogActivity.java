@@ -5,6 +5,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.sk.revisit.R;
+
 class LogActivity extends AppCompatActivity {
 
 	@Override
@@ -17,7 +19,7 @@ class LogActivity extends AppCompatActivity {
 		setContentView(linearLayout1);
 
 		TextView textView1 = new TextView(this);
-		textView1.setText("log");
+		textView1.setText(R.string.title_log);
 
 		linearLayout1.addView(textView1);
 	}

@@ -6,8 +6,8 @@ import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Toast;
@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
 	LinearLayout jsLinearLayout;
 	DrawerLayout drawerLayout;
 	JSAutoCompleteTextView jsTextView;
-	Button jsButton;
+	ImageButton jsButton;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

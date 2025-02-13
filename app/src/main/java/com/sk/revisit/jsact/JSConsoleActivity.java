@@ -22,53 +22,53 @@ import java.util.regex.Pattern;
 
 public class JSConsoleActivity extends AppCompatActivity {
 
-  private static final String TAG = "MainActivity";
-  private static final Pattern QUOTE_REMOVAL_PATTERN = Pattern.compile("^\"|\"$");
-  private static final String JS_INTERFACE_NAME = "Android";
+    private static final String TAG = "MainActivity";
+    private static final Pattern QUOTE_REMOVAL_PATTERN = Pattern.compile("^\"|\"$");
+    private static final String JS_INTERFACE_NAME = "Android";
 
-  private WebView webView;
-  private DrawerLayout drawerLayout;
-  private LinearLayout consoleLayout;
-  private ScrollView consoleScrollView;
-  private JSAutoCompleteTextView jsInput;
-  private Button executeJsButton;
-  private final List<String> jsCodeHistory = new ArrayList<>();
-  private JSWebViewManager jsWebViewManager;
-  private JSConsoleLogger jsLogger;
+    private WebView webView;
+    private DrawerLayout drawerLayout;
+    private LinearLayout consoleLayout;
+    private ScrollView consoleScrollView;
+    private JSAutoCompleteTextView jsInput;
+    private Button executeJsButton;
+    private final List<String> jsCodeHistory = new ArrayList<>();
+    private JSWebViewManager jsWebViewManager;
+    private JSConsoleLogger jsLogger;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-	    super.onCreate(savedInstanceState);
-	    setContentView(R.layout.activity_main);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-		initializeViews();
-	    jsWebViewManager = new JSWebViewManager(this, webView,jsLogger);
-	    jsLogger = new JSConsoleLogger(this,consoleLayout,consoleScrollView);
-	    jsInput.setWebView(webView);
-	    
-	    getLifecycle().addObserver((LifecycleEventObserver) (source, event) -> {
-	    if (event == Lifecycle.Event.ON_DESTROY) {
-	        if (webView != null) {
-	            webView.loadUrl("about:blank");
-	            webView.clearHistory();
-	            webView.removeAllViews();
-	            ((ViewGroup) webView.getParent()).removeView(webView);
-	            webView.destroy();
-	        }
-	    }
-		});
-	}
+        initializeViews();
+        jsWebViewManager = new JSWebViewManager(this, webView,jsLogger);
+        jsLogger = new JSConsoleLogger(this,consoleLayout,consoleScrollView);
+        jsInput.setWebView(webView);
 
-  private void initializeViews() {
-    webView = findViewById(R.id.myWebView);
+        getLifecycle().addObserver((LifecycleEventObserver) (source, event) -> {
+            if (event == Lifecycle.Event.ON_DESTROY) {
+                if (webView != null) {
+                    webView.loadUrl("about:blank");
+                    webView.clearHistory();
+                    webView.removeAllViews();
+                    ((ViewGroup) webView.getParent()).removeView(webView);
+                    webView.destroy();
+                }
+            }
+        });
+    }
+
+    private void initializeViews() {
+        webView = findViewById(R.id.myWebView);
     /*drawerLayout = findViewById(R.id.);
     consoleLayout = findViewById(R.id.myWebView);
     consoleScrollView = findViewById(R.id.myWebView);
     jsInput = findViewById(R.id.myWebView);
     executeJsButton = findViewById(R.id.myWebView);*/
-  }
+    }
 
-  private void setupExecuteButton() {
+    private void setupExecuteButton() {
     /*executeJsButton.setOnClickListener(
         v -> {
           String jsCode = jsInput.getText().toString().trim();
@@ -79,24 +79,24 @@ public class JSConsoleActivity extends AppCompatActivity {
             jsInput.setText("");
           }
         });*/
-    executeJsButton.setOnClickListener(v -> executeUserJS());
-    executeJsButton.setOnLongClickListener(
-            arg0 -> {
-              consoleLayout.removeAllViewsInLayout();
-              return false;
-            });
-  }
+        executeJsButton.setOnClickListener(v -> executeUserJS());
+        executeJsButton.setOnLongClickListener(
+                arg0 -> {
+                    consoleLayout.removeAllViewsInLayout();
+                    return false;
+                });
+    }
 
-	private void executeUserJS() {
-	    String jsCode = jsInput.getText().toString().trim();
-	    if (!jsCode.isEmpty()) {
-	        jsCodeHistory.add(jsCode);
-	        jsInput.adapter.notifyDataSetChanged();
-	        jsWebViewManager.executeJS(jsCode, result -> {
-	            String formattedResult = result.replaceAll("^\"|\"$", "");
-				jsLogger.logConsoleMessage(">" + jsCode + '\n' + "Result: " + formattedResult, ConsoleMessage.MessageLevel.LOG);
-	        });
-	        jsInput.setText("");
-	    }
-	}
+    private void executeUserJS() {
+        String jsCode = jsInput.getText().toString().trim();
+        if (!jsCode.isEmpty()) {
+            jsCodeHistory.add(jsCode);
+            jsInput.adapter.notifyDataSetChanged();
+            jsWebViewManager.executeJS(jsCode, result -> {
+                String formattedResult = result.replaceAll("^\"|\"$", "");
+                jsLogger.logConsoleMessage(">" + jsCode + '\n' + "Result: " + formattedResult, ConsoleMessage.MessageLevel.LOG);
+            });
+            jsInput.setText("");
+        }
+    }
 }

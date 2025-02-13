@@ -1,8 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
     <android.widget.LinearLayout
         android:layout_width="match_parent"
@@ -13,7 +12,7 @@
 			android:id="@+id/calc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Calculate size" />
+            android:text="@string/calculate_size" />
 
         <TextView
 			android:id="@+id/size"
@@ -31,7 +30,7 @@
 			android:id="@+id/refresh"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Refresh" />
+            android:text="@string/refresh" />
     </LinearLayout>
 
     <LinearLayout
@@ -43,7 +42,7 @@
 			android:id="@+id/dnbtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Download" />
+            android:text="@string/download" />
 
         <TextView
 			android:id="@+id/prog"
