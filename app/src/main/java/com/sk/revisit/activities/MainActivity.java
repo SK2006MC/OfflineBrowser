@@ -3,7 +3,6 @@ package com.sk.revisit.activities;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.view.View;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.EditText;
@@ -69,9 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
         jsButton.setOnClickListener(v->{
             String code = jsTextView.getText().toString();
-            jsManager.executeJS(code,r->{
-                jsLogger.logConsoleMessage(r);
-            });
+            jsManager.executeJS(code,r-> jsLogger.logConsoleMessage(r));
         });
 
     }
@@ -106,28 +103,21 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("SetJavaScriptEnabled")
     void initWebView(@NonNull WebView wv) {
-
-        //wv.setWebChromeClient(new WebChromeClient());
-
-        wv.setWebViewClient(new MyWebViewClient());
-
+        wv.setWebViewClient(new MyWebViewClient(this));
         WebSettings set = wv.getSettings();
-
         set.setAllowContentAccess(true);
         set.setAllowFileAccess(true);
-        //set.setAllowFileAccessFromFileURLs(true);
-        //set.setAllowUniversalAccessFromFileURLs(true);
-        //set.setAppCacheEnabled(true);
-        //set.setAppCachePath(getExternalFilesDir(null).getAbsolutePath());
+        set.setAllowFileAccessFromFileURLs(true);
+        set.setAllowUniversalAccessFromFileURLs(true);
         set.setDatabaseEnabled(true);
-        //set.setDatabasePath(getExternalFilesDir(null).getAbsolutePath());
+//        set.setDatabasePath(getExternalFilesDir(null).getAbsolutePath());
         set.setDomStorageEnabled(true);
         set.setJavaScriptCanOpenWindowsAutomatically(true);
         set.setJavaScriptEnabled(true);
         set.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         set.setOffscreenPreRaster(true);
         set.setUseWideViewPort(true);
-        //set.setUserAgentString();
+//        set.setUserAgentString();
     }
 
     @Override

@@ -81,7 +81,6 @@ public class SQLiteDBM {
         return details;
     }
 
-    // Download Requests Operations
     public long addDownloadRequest(Uri url) {
         open();
         ContentValues values = new ContentValues();
@@ -100,7 +99,7 @@ public class SQLiteDBM {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            String CREATE_URLS_TABLE = "CREATE TABLE " + TABLE_STORED_URLS + "("
+            String CREATE_URLS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_STORED_URLS + "("
                     + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + COLUMN_URL + " TEXT UNIQUE,"
                     + COLUMN_FILE_PATH + " TEXT,"
@@ -110,7 +109,7 @@ public class SQLiteDBM {
                     + COLUMN_ETAG + " TEXT" + ")";
             db.execSQL(CREATE_URLS_TABLE);
 
-            String CREATE_DOWNLOAD_REQUESTS_TABLE = "CREATE TABLE " + TABLE_DOWNLOAD_REQUESTS + "("
+            String CREATE_DOWNLOAD_REQUESTS_TABLE = "CREATE TABLE IF NOT EXISTS " + TABLE_DOWNLOAD_REQUESTS + "("
                     + COLUMN_REQUEST_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + COLUMN_REQUEST_URL + " TEXT UNIQUE,"
                     + COLUMN_REQUEST_HOST + " TEXT" + ")";

@@ -1,25 +1,35 @@
 package com.sk.revisit.managers;
 
+import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+
+import com.sk.revisit.MyUtils;
+
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 
 public class WebStorageManager {
 
 	MySettingsManager settingsManager;
-	String rootPath;
-	MyNetworkManager networkManager;
 
-	public WebStorageManager() {
+	MyUtils utils;
 
+	String TAG="WebStorageManager";
+	public WebStorageManager(Context context) {
+		this.settingsManager=new MySettingsManager(context);
+		this.utils=new MyUtils(this.settingsManager.getRootStoragePath());
 	}
 
 	public WebResourceResponse getStoredResponse(WebResourceRequest request) {
 		if (request.getMethod().equals("GET")) {
 			
 			Uri uri = request.getUrl();
-			String localPath = buildLocalPath(uri, rootPath);
+			String localPath = utils.buildLocalPath(uri);
 			File file = new File(localPath);
 			
 			if(file.exists()){
@@ -29,18 +39,17 @@ public class WebStorageManager {
 		return null;
 	}
 
-	public static String buildLocalPath(Uri uri, String rootPath) {
-		String last = uri.getLastPathSegment();
-		String localPathT = rootPath + '/' + uri.getHost() + uri.getEncodedPath();
-
-		if (last == null) {
-			return localPathT + "index.html";
+	WebResourceResponse loadFromLocal(Uri uri){
+		String filePath = utils.buildLocalPath(uri);
+		FileInputStream is;
+		WebResourceResponse response;
+		try {
+			is = new FileInputStream(filePath);
+			response=new WebResourceResponse("text","utf-8",is);
+		} catch (Exception e) {
+			response=new WebResourceResponse("text","utf-8",new ByteArrayInputStream("err".getBytes(StandardCharsets.UTF_8)));
+			Log.d(TAG,e.toString());
 		}
-
-		if (last.contains(".")) {
-			return localPathT;
-		} else {
-			return uri.toString().endsWith("/") ? localPathT + "index.html" : localPathT + "/index.html";
-		}
+		return  response;
 	}
 }

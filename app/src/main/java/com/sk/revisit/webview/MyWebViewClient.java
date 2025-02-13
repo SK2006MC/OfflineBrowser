@@ -1,5 +1,6 @@
 package com.sk.revisit.webview;
 
+import android.content.Context;
 import android.webkit.WebView;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -10,8 +11,8 @@ public class MyWebViewClient extends WebViewClient {
 	
 	WebStorageManager webStorageManager;
 	
-	public MyWebViewClient(){
-		webStorageManager = new WebStorageManager();
+	public MyWebViewClient(Context context){
+		webStorageManager = new WebStorageManager(context);
 	}
 	
 	@Override
