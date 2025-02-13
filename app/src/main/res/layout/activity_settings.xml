@@ -10,5 +10,5 @@
         android:gravity="center_vertical|center|center_horizontal"
         android:text="@string/settings"
         android:textSize="30sp" />
-		
+
 </LinearLayout>

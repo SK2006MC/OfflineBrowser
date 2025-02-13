@@ -2,6 +2,7 @@ package com.sk.revisit.activities;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -14,9 +15,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
-import android.os.Bundle;
-import com.google.android.material.navigation.NavigationView;
 
+import com.google.android.material.navigation.NavigationView;
 import com.sk.revisit.R;
 import com.sk.revisit.jsact.JSConsoleLogger;
 import com.sk.revisit.jsact.JSWebViewManager;
@@ -57,18 +57,18 @@ public class MainActivity extends AppCompatActivity {
         jsTextView.setWebView(webView);
     }
 
-    void initJSConsole(){
+    void initJSConsole() {
         jsNav = findViewById(R.id.jsnav);
         jsTextView = findViewById(R.id.js_input);
         jsLinearLayout = findViewById(R.id.console_layout);
         jsScrollView = findViewById(R.id.console_scroll_view);
-        jsLogger = new JSConsoleLogger(this,jsLinearLayout,jsScrollView);
+        jsLogger = new JSConsoleLogger(this, jsLinearLayout, jsScrollView);
         jsButton = findViewById(R.id.execute_js_btn);
-        jsManager = new JSWebViewManager(this,webView,jsLogger);
+        jsManager = new JSWebViewManager(this, webView, jsLogger);
 
-        jsButton.setOnClickListener(v->{
+        jsButton.setOnClickListener(v -> {
             String code = jsTextView.getText().toString();
-            jsManager.executeJS(code,r-> jsLogger.logConsoleMessage(r));
+            jsManager.executeJS(code, r -> jsLogger.logConsoleMessage(r));
         });
 
     }
@@ -76,15 +76,15 @@ public class MainActivity extends AppCompatActivity {
     void initNavView(@NonNull NavigationView navigationView) {
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-            if(id == R.id.nav_dn){
+            if (id == R.id.nav_dn) {
                 startMyActivity(DownloadActivity.class);
-            } else if (id==R.id.nav_ud) {
+            } else if (id == R.id.nav_ud) {
                 startMyActivity(UpdateActivity.class);
-            } else if (id==R.id.nav_settings) {
+            } else if (id == R.id.nav_settings) {
                 startMyActivity(SettingsActivity.class);
-            } else if (id==R.id.nav_about) {
+            } else if (id == R.id.nav_about) {
                 startMyActivity(AboutActivity.class);
-            } else if (id==R.id.nav_web) {
+            } else if (id == R.id.nav_web) {
                 startMyActivity(WebpagesActivity.class);
             }
             return false;

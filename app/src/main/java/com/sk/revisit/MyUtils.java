@@ -5,8 +5,8 @@ import android.net.Uri;
 public class MyUtils {
     String rootPath;
 
-    public MyUtils(String rootPath){
-        this.rootPath=rootPath;
+    public MyUtils(String rootPath) {
+        this.rootPath = rootPath;
     }
 
     public String buildLocalPath(Uri uri) {

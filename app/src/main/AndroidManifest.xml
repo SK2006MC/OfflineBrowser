@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:versionCode="1"
-	android:versionName="1.0">
+    android:versionName="1.0">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -9,7 +9,8 @@
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-sdk android:minSdkVersion="27"/>
+
+    <uses-sdk android:minSdkVersion="27" />
 
     <application
         android:allowBackup="true"
@@ -27,26 +28,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-		
-		<activity
-			android:name=".activities.AboutActivity"
-			android:exported="true"/>
-			
-		<activity
-			android:name=".activities.DownloadActivity"
-			android:exported="true"/>
-			
-		<activity
-			android:exported="true"
-			android:name=".activities.UpdateActivity" />
-			
-		<activity
-			android:exported="true"
-			android:name=".activities.WebpagesActivity" />
-		
-		<activity
-			android:exported="true"
-			android:name=".activities.SettingsActivity" />
+
+        <activity
+            android:name=".activities.AboutActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".activities.DownloadActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".activities.UpdateActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".activities.WebpagesActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:exported="true" />
     </application>
 
 </manifest>

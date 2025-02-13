@@ -2,11 +2,13 @@
 package com.sk.revisit.jsv2;
 
 import android.util.Log;
+
+import org.json.JSONArray;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.json.JSONArray;
 
 /**
  * Manages autocomplete suggestions for JavaScript code.
@@ -22,8 +24,8 @@ public class AutoCompleteManager {
     /**
      * Parses JavaScript response and extracts autocomplete suggestions.
      *
-     * @param result      The JavaScript execution result.
-     * @param userInput   The current user input.
+     * @param result    The JavaScript execution result.
+     * @param userInput The current user input.
      * @return List of suggestions.
      */
     public List<String> getSuggestions(String result, String userInput) {

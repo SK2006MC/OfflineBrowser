@@ -2,11 +2,12 @@
 package com.sk.revisit.jsact;
 
 import android.content.Context;
+import android.webkit.ConsoleMessage;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
 import androidx.core.content.ContextCompat;
-import android.webkit.ConsoleMessage;
 
 /**
  * Handles JavaScript console logging inside the UI.
@@ -31,25 +32,29 @@ public class JSConsoleLogger {
         consoleLayout.addView(textView);
         consoleScrollView.fullScroll(ScrollView.FOCUS_DOWN);
     }
-    
-    public void logConsoleMessage(ConsoleMessage consoleMessage){
-    	String formattedMessage =
-          consoleMessage.message()
-              + ":at "
-              + consoleMessage.lineNumber()
-              + " in "
-              + consoleMessage.sourceId();
-    
-      logConsoleMessage(formattedMessage,consoleMessage.messageLevel());
+
+    public void logConsoleMessage(ConsoleMessage consoleMessage) {
+        String formattedMessage =
+                consoleMessage.message()
+                        + ":at "
+                        + consoleMessage.lineNumber()
+                        + " in "
+                        + consoleMessage.sourceId();
+
+        logConsoleMessage(formattedMessage, consoleMessage.messageLevel());
     }
-    
+
     private int getColorForLogLevel(ConsoleMessage.MessageLevel level) {
         switch (level) {
-            case DEBUG: return ContextCompat.getColor(context, android.R.color.darker_gray);
-            case ERROR: return ContextCompat.getColor(context, android.R.color.holo_red_dark);
-            case WARNING: return ContextCompat.getColor(context, android.R.color.holo_orange_dark);
+            case DEBUG:
+                return ContextCompat.getColor(context, android.R.color.darker_gray);
+            case ERROR:
+                return ContextCompat.getColor(context, android.R.color.holo_red_dark);
+            case WARNING:
+                return ContextCompat.getColor(context, android.R.color.holo_orange_dark);
             //case LOG:
-            default: return ContextCompat.getColor(context, android.R.color.black);
+            default:
+                return ContextCompat.getColor(context, android.R.color.black);
         }
     }
 

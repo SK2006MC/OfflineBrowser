@@ -6,16 +6,16 @@
     <android.widget.LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="horizontal">
 
         <Button
-			android:id="@+id/calc"
+            android:id="@+id/calc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/calculate_size" />
 
         <TextView
-			android:id="@+id/size"
+            android:id="@+id/size"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="size" />
@@ -24,10 +24,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="horizontal">
 
         <Button
-			android:id="@+id/refresh"
+            android:id="@+id/refresh"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/refresh" />
@@ -36,16 +36,16 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="horizontal">
 
         <Button
-			android:id="@+id/dnbtn"
+            android:id="@+id/dnbtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/download" />
 
         <TextView
-			android:id="@+id/prog"
+            android:id="@+id/prog"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="progress" />

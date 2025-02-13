@@ -2,7 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent">
 
     <WebView
         android:id="@+id/myWebView"
@@ -20,11 +20,11 @@
 
     <LinearLayout
         android:id="@+id/jsnav"
-		android:background="#FFFFFF"
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:orientation="vertical" >
+        android:background="#FFFFFF"
+        android:orientation="vertical">
 
         <ScrollView
             android:id="@+id/console_scroll_view"

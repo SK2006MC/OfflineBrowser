@@ -25,14 +25,13 @@ public class JSConsoleActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final Pattern QUOTE_REMOVAL_PATTERN = Pattern.compile("^\"|\"$");
     private static final String JS_INTERFACE_NAME = "Android";
-
+    private final List<String> jsCodeHistory = new ArrayList<>();
     private WebView webView;
     private DrawerLayout drawerLayout;
     private LinearLayout consoleLayout;
     private ScrollView consoleScrollView;
     private JSAutoCompleteTextView jsInput;
     private Button executeJsButton;
-    private final List<String> jsCodeHistory = new ArrayList<>();
     private JSWebViewManager jsWebViewManager;
     private JSConsoleLogger jsLogger;
 
@@ -42,8 +41,8 @@ public class JSConsoleActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initializeViews();
-        jsWebViewManager = new JSWebViewManager(this, webView,jsLogger);
-        jsLogger = new JSConsoleLogger(this,consoleLayout,consoleScrollView);
+        jsWebViewManager = new JSWebViewManager(this, webView, jsLogger);
+        jsLogger = new JSConsoleLogger(this, consoleLayout, consoleScrollView);
         jsInput.setWebView(webView);
 
         getLifecycle().addObserver((LifecycleEventObserver) (source, event) -> {
