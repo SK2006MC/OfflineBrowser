@@ -14,43 +14,6 @@ import java.util.Map;
 public class MyNetworkManager {
     final String TAG = "MyNetworkManager";
 
-    public void downloadUrlToFile(Uri url, File file) {
-        try {
-
-        } catch (Exception e) {
-
-        }
-    }
-
-    public void downloadUrl(String urlString, File file) {
-
-        HttpURLConnection connection = null;
-        InputStream inputStream = null;
-        try {
-            URL url = new URL(urlString);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.connect();
-
-            //responseData.statusCode = connection.getResponseCode();
-            int statusCode = connection.getResponseCode();
-            if (statusCode == HttpURLConnection.HTTP_OK) {
-                inputStream = connection.getInputStream();
-                //responseData.inputStream = inputStream;
-                Map<String, String> headers = getConnectionHeaders(connection);
-            } else {
-                //responseData.errorMessage = "HTTP error code: " + responseData.statusCode;
-            }
-
-        } catch (IOException e) {
-            //responseData.errorMessage = "Download error: " + e.getMessage();
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
-        //return responseData;
-    }
-
     public Map<String, String> getHeadRequestHeaders(String urlString) {
         HttpURLConnection connection = null;
         Map<String, String> headers = new HashMap<>();

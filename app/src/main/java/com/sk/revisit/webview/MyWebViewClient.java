@@ -19,6 +19,6 @@ public class MyWebViewClient extends WebViewClient {
 
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-        return webStorageManager.getStoredResponse(request);
+        return webStorageManager.getResponse(request);
     }
 }

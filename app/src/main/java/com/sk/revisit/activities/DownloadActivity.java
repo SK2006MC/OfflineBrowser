@@ -12,6 +12,6 @@ public class DownloadActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle arg0) {
         super.onCreate(arg0);
-        setContentView(R.layout.download);
+        setContentView(R.layout.activity_download);
     }
 }

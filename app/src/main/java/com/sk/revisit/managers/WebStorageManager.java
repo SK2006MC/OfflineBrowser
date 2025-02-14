@@ -2,16 +2,22 @@ package com.sk.revisit.managers;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
+import android.webkit.URLUtil;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+
+import androidx.annotation.NonNull;
 
 import com.sk.revisit.MyUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 public class WebStorageManager {
 
@@ -26,31 +32,43 @@ public class WebStorageManager {
         this.utils = utils;
     }
 
-    public WebResourceResponse getStoredResponse(WebResourceRequest request) {
-        if (request.getMethod().equals("GET")) {
 
-            Uri uri = request.getUrl();
-            String localPath = utils.buildLocalPath(uri);
-            File file = new File(localPath);
+    public WebResourceResponse getResponse(WebResourceRequest request) {
+        Uri uri = request.getUrl();
+        String uriStr=uri.toString();
+        if (!URLUtil.isNetworkUrl(uriStr)) {
+            return null;
+        }
 
-            if (file.exists()) {
+        String localPath = utils.buildLocalPath(uri);
+        File localFile=new File(localPath);
 
+        if ("GET".equals(request.getMethod())) {
+            if (localFile.exists()) {
+                if (true) {
+                    long remoteSize = utils.getSizeFromUrl(uri);
+                    long localSize = utils.getSizeFromLocal(localPath);
+                    if (remoteSize != -1 && localSize != -1 && remoteSize != localSize) {
+                        utils.download(uri);
+                    }
+                }
+            } else {
+                utils.download(uri);
             }
+            return loadFromLocal(localFile);
         }
         return null;
     }
 
-    WebResourceResponse loadFromLocal(Uri uri) {
-        String filePath = utils.buildLocalPath(uri);
-        FileInputStream is;
-        WebResourceResponse response;
+    private WebResourceResponse loadFromLocal(@NonNull File localFile) {
+        String mimeType = utils.getMimeType(localFile.getPath());
         try {
-            is = new FileInputStream(filePath);
-            response = new WebResourceResponse("text", "utf-8", is);
+            InputStream fis = null;
+            fis = Files.newInputStream(localFile.toPath());
+            return new WebResourceResponse(mimeType, "UTF-8", fis);
         } catch (Exception e) {
-            response = new WebResourceResponse("text", "utf-8", new ByteArrayInputStream("err".getBytes(StandardCharsets.UTF_8)));
-            Log.d(TAG, e.toString());
+            Log.d("WEbView", e.toString());
+            return null;
         }
-        return response;
     }
 }
