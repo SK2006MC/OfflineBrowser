@@ -20,7 +20,7 @@ OfflineBrowser is a unique browser designed to store all web content locally. Th
 To install and run OfflineBrowser, follow these steps:
 
 ### Method 1
-Click [here](/release) to download the APK and then install it. Now it's ready to use.
+Click [here](https://github.com/SK2006MC/OfflineBrowser/releases) to download the APK and then install it. Now it's ready to use.
 
 ### Method 2
 1. Clone the repository:
