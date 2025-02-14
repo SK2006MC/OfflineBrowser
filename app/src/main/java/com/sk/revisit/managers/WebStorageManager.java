@@ -4,76 +4,136 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.sk.revisit.MyUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 public class WebStorageManager {
 
-    final MySettingsManager settingsManager;
+    private final MySettingsManager settingsManager;
+    private final MyUtils utils;
+    public MyDNListener dnListener;
+    private static final String TAG = "WebStorageManager";
+    private static final String GET_METHOD = "GET";
+    private static final String UTF_8 = "UTF-8";
 
-    final MyUtils utils;
-
-    final String TAG = "WebStorageManager";
-
-    public WebStorageManager(Context context,MyUtils utils) {
+    public WebStorageManager(Context context, MyUtils utils) {
         this.settingsManager = new MySettingsManager(context);
         this.utils = utils;
     }
 
-
+    /**
+     * Intercepts and handles web resource requests.
+     *
+     * @param request The web resource request.
+     * @return A WebResourceResponse if the request can be handled locally, null otherwise.
+     */
+    @Nullable
     public WebResourceResponse getResponse(WebResourceRequest request) {
-        if (!request.getMethod().equals("GET")) {
-            return  null;
+        if (!GET_METHOD.equals(request.getMethod())) {
+            Log.d(TAG, "Request method is not GET, ignoring: " + request.getMethod());
+            return null;
         }
 
         Uri uri = request.getUrl();
-        String uriStr=uri.toString();
+        String uriStr = uri.toString();
 
         if (!URLUtil.isNetworkUrl(uriStr)) {
+            Log.d(TAG, "Not a network URL, ignoring: " + uriStr);
             return null;
         }
 
         String localPath = utils.buildLocalPath(uri);
-        File localFile=new File(localPath);
+        File localFile = new File(localPath);
 
-        if ("GET".equals(request.getMethod())) {
-            if (localFile.exists()) {
-                if (true) {
-                    long remoteSize = utils.getSizeFromUrl(uri);
-                    long localSize = utils.getSizeFromLocal(localPath);
-                    if (remoteSize != -1 && localSize != -1 && remoteSize != localSize) {
-                        utils.download(uri);
-                    }
-                }
+        if (localFile.exists()) {
+            if (shouldUpdateLocalFile(uri, localPath)) {
+                Log.d(TAG, "Updating local file: " + localPath);
+                utils.download(uri,dnListener);
             } else {
-                utils.download(uri);
+                Log.d(TAG, "Loading from local file: " + localPath);
             }
-            return loadFromLocal(localFile);
+        } else {
+            Log.d(TAG, "Local file does not exist, downloading: " + localPath);
+            utils.download(uri,dnListener);
         }
-        return null;
+
+        return loadFromLocal(localFile);
     }
 
+    /**
+     * Checks if the local file should be updated based on the remote file size.
+     *
+     * @param uri       The URI of the remote resource.
+     * @param localPath The local path of the file.
+     * @return True if the local file should be updated, false otherwise.
+     */
+    private boolean shouldUpdateLocalFile(Uri uri, String localPath) {
+        long remoteSize = utils.getSizeFromUrl(uri);
+        long localSize = utils.getSizeFromLocal(localPath);
+        return remoteSize != -1 && localSize != -1 && remoteSize != localSize;
+    }
+
+    /**
+     * Loads a resource from a local file.
+     *
+     * @param localFile The local file to load from.
+     * @return A WebResourceResponse containing the local file's data, or null if an error occurs.
+     */
+    @Nullable
     private WebResourceResponse loadFromLocal(@NonNull File localFile) {
-        String mimeType = utils.getMimeType(localFile.getPath());
-        try {
-            InputStream fis = null;
-            fis = Files.newInputStream(localFile.toPath());
-            return new WebResourceResponse(mimeType, "UTF-8", fis);
-        } catch (Exception e) {
-            Log.d("WEbView", e.toString());
+        if (!localFile.exists() || !localFile.isFile()) {
+            Log.e(TAG, "Local file does not exist or is not a file: " + localFile.getAbsolutePath());
             return null;
+        }
+        String mimeType = getMimeType(localFile.getPath());
+        try {
+            InputStream fis = new FileInputStream(localFile);
+            return new WebResourceResponse(mimeType, UTF_8, fis);
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "Error loading from local file: " + localFile.getAbsolutePath(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Gets the MIME type of a file based on its extension.
+     *
+     * @param url The URL or file path.
+     * @return The MIME type, or "application/octet-stream" if unknown.
+     */
+    private String getMimeType(String url) {
+        String type = null;
+        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        }
+        return type != null ? type : "application/octet-stream";
+    }
+
+    private static class MyDNListener implements MyUtils.DownloadListener{
+
+        @Override
+        public void onSuccess(File file) {
+
+        }
+
+        @Override
+        public void onFailure(Exception e) {
+
         }
     }
 }
