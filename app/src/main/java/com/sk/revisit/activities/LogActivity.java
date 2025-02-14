@@ -1,8 +1,6 @@
 package com.sk.revisit.activities;
 
 import android.os.Bundle;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -13,6 +11,6 @@ class LogActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle arg0) {
         super.onCreate(arg0);
-        setContentView(R.id);
+        setContentView(R.layout.activity_log);
     }
 }
