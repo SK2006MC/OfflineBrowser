@@ -7,36 +7,36 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+
 public class MyUtils {
     private static final String TAG = "MyUtils";
-    private static final int CONNECT_TIMEOUT = 5000; // 5 seconds
-    private static final int READ_TIMEOUT = 5000; // 5 seconds
     private static final int MAX_THREADS = 5;
     private static final String INDEX_HTML = "index.html";
     private static final long INVALID_SIZE = -1;
 
     private final String rootPath;
     private final ExecutorService executorService;
+    private final OkHttpClient client;
 
     public MyUtils(String rootPath) {
         this.rootPath = rootPath;
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
+        this.client = new OkHttpClient();
     }
 
     /**
@@ -97,65 +97,94 @@ public class MyUtils {
     }
 
     /**
-     * Gets the size of a resource from a URL.
+     * Gets the size of a resource from a URL using OkHttp.
      *
      * @param uri The URI of the resource.
      * @return The size of the resource in bytes, or -1 if an error occurs.
      */
     public long getSizeFromUrl(@NonNull Uri uri) {
-        try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(uri.toString()).openConnection();
-            connection.setRequestMethod("HEAD");
-            return connection.getContentLength();
+        Request request = new Request.Builder()
+                .url(uri.toString())
+                .head() // Use HEAD request to get only headers
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                ResponseBody body = response.body();
+                if (body != null) {
+                    return body.contentLength();
+                }
+            } else {
+                Log.e(TAG, "Error getting size from URL: " + uri + ". Response code: " + response.code());
+            }
         } catch (IOException e) {
             Log.e(TAG, "Error getting size from URL: " + uri, e);
-            return INVALID_SIZE;
         }
+        return INVALID_SIZE;
     }
 
     /**
-     * Downloads a resource from a URI to a local file.
+     * Downloads a resource from a URI to a local file using OkHttp.
      *
-     * @param uri The URI of the resource to download.
+     * @param uri      The URI of the resource to download.
+     * @param listener The listener to receive download events.
      */
-    public void download(@NonNull final Uri uri) {
+    public void download(@NonNull final Uri uri, @NonNull final DownloadListener listener) {
         executorService.submit(() -> {
-            try {
-                String localFilePath = buildLocalPath(uri);
-                if (localFilePath == null) {
-                    Log.e(TAG, "Failed to build local path for URI: " + uri);
+            String localFilePath = buildLocalPath(uri);
+            if (localFilePath == null) {
+                listener.onFailure(new IOException("Failed to build local path for URI: " + uri));
+                return;
+            }
+            File localFile = new File(localFilePath);
+            File parentFile = localFile.getParentFile();
+            if (parentFile != null && !parentFile.exists()) {
+                boolean mkdirs = parentFile.mkdirs();
+                if (!mkdirs) {
+                    listener.onFailure(new IOException("Failed to create directory: " + parentFile.getAbsolutePath()));
                     return;
                 }
-                File localFile = new File(localFilePath);
-                URL url = new URL(uri.toString());
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setConnectTimeout(CONNECT_TIMEOUT);
-                connection.setReadTimeout(READ_TIMEOUT);
-                connection.setRequestMethod("GET");
-
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    File parentFile = localFile.getParentFile();
-                    if (parentFile != null && !parentFile.exists()) {
-                        boolean mkdirs = parentFile.mkdirs();
-                        if (mkdirs) Log.d(TAG, "Created directory: " + parentFile.getAbsolutePath());
-                        else Log.e(TAG, "Failed to create directory: " + parentFile.getAbsolutePath());
-                    }
-                    try (InputStream in = new BufferedInputStream(connection.getInputStream());
-                         FileOutputStream fileOutputStream = new FileOutputStream(localFile);
-                         FileChannel outputChannel = fileOutputStream.getChannel();
-                         ReadableByteChannel inputChannel = Channels.newChannel(in)) {
-                        outputChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
-                        Log.d(TAG, "Downloaded: " + uri + " to " + localFilePath);
-                    }
-                } else {
-                    Log.e(TAG, "Download failed. Response code: " + responseCode + " for URI: " + uri);
-                }
-            } catch (MalformedURLException e) {
-                Log.e(TAG, "Invalid URL: " + uri, e);
-            } catch (IOException e) {
-                Log.e(TAG, "Error downloading from URI: " + uri, e);
+                Log.d(TAG, "Created directory: " + parentFile.getAbsolutePath());
             }
+
+            Request request = new Request.Builder()
+                    .url(uri.toString())
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    Log.e(TAG, "Download failed for URI: " + uri, e);
+                    listener.onFailure(e);
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                    if (response.isSuccessful()) {
+                        ResponseBody body = response.body();
+                        if (body == null) {
+                            listener.onFailure(new IOException("Empty response body for URI: " + uri));
+                            return;
+                        }
+                        try (InputStream in = body.byteStream();
+                             FileOutputStream out = new FileOutputStream(localFile)) {
+                            byte[] buffer = new byte[8192];
+                            int bytesRead;
+                            while ((bytesRead = in.read(buffer)) != -1) {
+                                out.write(buffer, 0, bytesRead);
+                            }
+                            Log.d(TAG, "Downloaded: " + uri + " to " + localFilePath);
+                            listener.onSuccess(localFile);
+                        } catch (IOException e) {
+                            Log.e(TAG, "Error writing to file: " + localFilePath, e);
+                            listener.onFailure(e);
+                        }
+                    } else {
+                        Log.e(TAG, "Download failed. Response code: " + response.code() + " for URI: " + uri);
+                        listener.onFailure(new IOException("Download failed. Response code: " + response.code()));
+                    }
+                }
+            });
         });
     }
 
@@ -164,5 +193,24 @@ public class MyUtils {
      */
     public void shutdown() {
         executorService.shutdown();
+    }
+
+    /**
+     * Interface for listening to download events.
+     */
+    public interface DownloadListener {
+        /**
+         * Called when the download is successful.
+         *
+         * @param file The downloaded file.
+         */
+        void onSuccess(File file);
+
+        /**
+         * Called when the download fails.
+         *
+         * @param e The exception that caused the failure.
+         */
+        void onFailure(Exception e);
     }
 }
