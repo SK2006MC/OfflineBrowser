@@ -202,7 +202,7 @@ public class HostUrlAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         public void bind(Url url) {
-            urlTextView.setText(url.getUrl()); // Replace with your actual method to get the URL
+            urlTextView.setText(url.getUrl()); // Replace with your actual method to get the UR
         }
     }
 }
