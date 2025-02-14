@@ -15,11 +15,11 @@ import java.nio.charset.StandardCharsets;
 
 public class WebStorageManager {
 
-    MySettingsManager settingsManager;
+    final MySettingsManager settingsManager;
 
-    MyUtils utils;
+    final MyUtils utils;
 
-    String TAG = "WebStorageManager";
+    final String TAG = "WebStorageManager";
 
     public WebStorageManager(Context context,MyUtils utils) {
         this.settingsManager = new MySettingsManager(context);

@@ -20,4 +20,5 @@
     <string name="webpages">WebPages</string>
     <string name="updateurls">UpdateUrls</string>
     <string name="downloadurls">DownloadUrls</string>
+    <string name="welcome_msg">Welcome to Revisit!</string>
 </resources>

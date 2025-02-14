@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="8dp"
-            android:text="@string/welcom_to_offline_browser"
+            android:text="@string/welcome_msg"
             android:textSize="30sp" />
 
         <LinearLayout

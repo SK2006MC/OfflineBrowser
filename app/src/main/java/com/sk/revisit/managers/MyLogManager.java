@@ -9,10 +9,10 @@ import java.io.IOException;
 
 public class MyLogManager {
 
-    File file;
-    String filePath;
+    final File file;
+    final String filePath;
     FileWriter fw;
-    Context c;
+    final Context c;
 
     MyLogManager(Context c, String filePath) {
         this.filePath = filePath;

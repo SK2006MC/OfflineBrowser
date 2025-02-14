@@ -3,7 +3,7 @@ package com.sk.revisit;
 import android.net.Uri;
 
 public class MyUtils {
-    String rootPath;
+    final String rootPath;
 
     public MyUtils(String rootPath) {
         this.rootPath = rootPath;

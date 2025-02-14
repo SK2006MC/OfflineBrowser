@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MyNetworkManager {
-    String TAG = "MyNetworkManager";
+    final String TAG = "MyNetworkManager";
 
     public void downloadUrlToFile(Uri url, File file) {
         try {

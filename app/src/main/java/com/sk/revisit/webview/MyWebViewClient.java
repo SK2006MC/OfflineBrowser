@@ -11,7 +11,7 @@ import com.sk.revisit.managers.WebStorageManager;
 
 public class MyWebViewClient extends WebViewClient {
 
-    WebStorageManager webStorageManager;
+    final WebStorageManager webStorageManager;
 
     public MyWebViewClient(Context context, MyUtils utils) {
         webStorageManager = new WebStorageManager(context,utils);
