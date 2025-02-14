@@ -23,6 +23,10 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            multiDexEnabled true
+        }
+        debug {
+            multiDexEnabled true
         }
     }
 
@@ -33,6 +37,10 @@ android {
 
     buildFeatures {
         viewBinding true
+    }
+    dependenciesInfo {
+        includeInApk true
+        includeInBundle true
     }
 }
 dependencies {
