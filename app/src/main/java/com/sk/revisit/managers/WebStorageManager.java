@@ -21,9 +21,9 @@ public class WebStorageManager {
 
     String TAG = "WebStorageManager";
 
-    public WebStorageManager(Context context) {
+    public WebStorageManager(Context context,MyUtils utils) {
         this.settingsManager = new MySettingsManager(context);
-        this.utils = new MyUtils(this.settingsManager.getRootStoragePath());
+        this.utils = utils;
     }
 
     public WebResourceResponse getStoredResponse(WebResourceRequest request) {

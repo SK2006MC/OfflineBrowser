@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
+import com.sk.revisit.MyUtils;
 import com.sk.revisit.R;
 import com.sk.revisit.jsact.JSConsoleLogger;
 import com.sk.revisit.jsact.JSWebViewManager;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     DrawerLayout drawerLayout;
     JSAutoCompleteTextView jsTextView;
     ImageButton jsButton;
+    MyUtils myUtils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
         headerView = navigationView.getHeaderView(0);
         url = headerView.findViewById(R.id.urlEditText);
         webView = findViewById(R.id.myWebView);
+
+        myUtils = new MyUtils(getObbDir().getAbsolutePath());
 
         initJSConsole();
         initNavView(navigationView);
@@ -103,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("SetJavaScriptEnabled")
     void initWebView(@NonNull WebView wv) {
-        wv.setWebViewClient(new MyWebViewClient(this));
+        wv.setWebViewClient(new MyWebViewClient(this,myUtils));
         WebSettings set = wv.getSettings();
         set.setAllowContentAccess(true);
         set.setAllowFileAccess(true);
