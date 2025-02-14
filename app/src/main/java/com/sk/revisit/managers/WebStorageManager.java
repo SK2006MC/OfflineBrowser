@@ -34,8 +34,13 @@ public class WebStorageManager {
 
 
     public WebResourceResponse getResponse(WebResourceRequest request) {
+        if (!request.getMethod().equals("GET")) {
+            return  null;
+        }
+
         Uri uri = request.getUrl();
         String uriStr=uri.toString();
+
         if (!URLUtil.isNetworkUrl(uriStr)) {
             return null;
         }

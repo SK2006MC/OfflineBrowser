@@ -1,8 +1,9 @@
 package com.sk.revisit;
 
 import android.net.Uri;
-import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -26,7 +27,7 @@ public class MyUtils {
         this.rootPath = rootPath;
     }
 
-    public String buildLocalPath(Uri uri) {
+    public String buildLocalPath(@NonNull Uri uri) {
         String last = uri.getLastPathSegment();
         String localPathT = rootPath + '/' + uri.getHost() + uri.getEncodedPath();
 

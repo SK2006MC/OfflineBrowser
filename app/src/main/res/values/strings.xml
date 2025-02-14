@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Revisit</string>
     <string name="enter_javascript_code">Enter JavaScript code</string>
-    <string name="execute_the_jscode">execute the jscode</string>
+    <string name="execute_the_jscode">Execute the JavaScript code</string>
     <string name="title_log">log</string>
     <string name="about">About</string>
     <string name="settings">Settings</string>
@@ -9,7 +9,6 @@
     <string name="refresh">Refresh</string>
     <string name="calculate_size">Calculate size</string>
     <string name="download">Download</string>
-    <string name="welcom_to_offline_browser">Welcom to Offline Browser</string>
     <string name="choose_the_location_to_save_the_web">Choose the location to save the web:</string>
     <string name="pick">Pick</string>
     <string name="the_selected_location_is">The selected location is:</string>
@@ -21,11 +20,7 @@
     <string name="updateurls">UpdateUrls</string>
     <string name="downloadurls">DownloadUrls</string>
     <string name="welcome_msg">Welcome to Revisit!</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
+
 
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
