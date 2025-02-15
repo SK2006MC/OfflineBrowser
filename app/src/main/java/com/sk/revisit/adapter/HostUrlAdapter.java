@@ -1,208 +1,119 @@
-package com.sk.revisit.adapter;
+package com.sk.revisit.adapter; // Replace with your package name
 
-import android.util.Log;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
-
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.thoughtbot.expandablerecyclerview.ExpandableRecyclerViewAdapter;
+import com.thoughtbot.expandablerecyclerview.models.ExpandableGroup;
 
-import com.sk.revisit.R;
+import com.sk.revisit.databinding.ItemHostBinding;
+import com.sk.revisit.databinding.ItemUrlBinding;
 import com.sk.revisit.data.Host;
 import com.sk.revisit.data.Url;
-
 import java.util.List;
 
-public class HostUrlAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class HostUrlAdapter extends ExpandableRecyclerViewAdapter<HostUrlAdapter.HostViewHolder, HostUrlAdapter.UrlViewHolder> {
 
-    private static final String TAG = "HostUrlAdapter";
-    private static final int VIEW_TYPE_HOST = 0;
-    private static final int VIEW_TYPE_URL = 1;
+    private Context context;
+    private List<Host> hosts;
 
-    private List<Host> hostList;
-
-    public HostUrlAdapter(List<Host> hostList) {
-        this.hostList = hostList;
-    }
-
-    public void setHostList(List<Host> hostList) {
-        this.hostList = hostList;
-        notifyDataSetChanged();
-    }
-
-    /**
-     * Calculates the host's position in the hostList for a given URL item position in the RecyclerView.
-     *
-     * @param urlItemPosition The position of the URL item in the RecyclerView.
-     * @return The index of the host in the hostList that contains the URL, or -1 if not found.
-     */
-    private int getHostPositionForUrl(int urlItemPosition) {
-        int currentPosition = 0;
-        for (int i = 0; i < hostList.size(); i++) {
-            Host host = hostList.get(i);
-            // Check if the current position is the host item itself
-            if (currentPosition == urlItemPosition) {
-                return -1; // It's a host, not a URL
-            }
-            currentPosition++; // Increment for the host item
-
-            if (host.isExpanded()) {
-                int urlsSize = host.getUrls().size();
-                if (urlItemPosition < currentPosition + urlsSize) {
-                    return i; // Found the host index for the URL item
-                }
-                currentPosition += urlsSize;
-            }
-        }
-        Log.e(TAG, "getHostPositionForUrl: URL position not found in any host. urlItemPosition: " + urlItemPosition);
-        return -1; // URL position not found in any host
-    }
-
-    /**
-     * Calculates the position of a URL within its host's URL list.
-     *
-     * @param urlItemPosition The position of the URL item in the RecyclerView.
-     * @param hostPosition    The position of the host in the hostList.
-     * @return The index of the URL within the host's URL list, or -1 if not found.
-     */
-    private int getUrlPositionInHost(int urlItemPosition, int hostPosition) {
-        if (hostPosition == -1) {
-            Log.e(TAG, "getUrlPositionInHost: Invalid host position provided: -1");
-            return -1;
-        }
-
-        int currentPosition = 0;
-        for (int i = 0; i < hostList.size(); i++) {
-            Host host = hostList.get(i);
-            if (i == hostPosition) {
-                if (host.isExpanded()) {
-                    int urlIndexInHost = urlItemPosition - currentPosition - 1;
-                    if (urlIndexInHost >= 0 && urlIndexInHost < host.getUrls().size()) {
-                        return urlIndexInHost;
-                    } else {
-                        Log.e(TAG, "getUrlPositionInHost: URL position out of bounds for host. urlItemPosition: " + urlItemPosition + ", hostPosition: " + hostPosition);
-                        return -1;
-                    }
-                } else {
-                    Log.e(TAG, "getUrlPositionInHost: Host is not expanded. hostPosition: " + hostPosition);
-                    return -1;
-                }
-            }
-            currentPosition++; // For the host item
-            if (host.isExpanded()) {
-                currentPosition += host.getUrls().size();
-            }
-        }
-        Log.e(TAG, "getUrlPositionInHost: Host not found for position: " + hostPosition);
-        return -1; // Host not found
-    }
-
-    @NonNull
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        if (viewType == VIEW_TYPE_HOST) {
-            View view = inflater.inflate(R.layout.host_item, parent, false);
-            return new HostViewHolder(view);
-        } else if (viewType == VIEW_TYPE_URL) {
-            View view = inflater.inflate(R.layout.url_item, parent, false);
-            return new UrlViewHolder(view);
-        } else {
-            throw new IllegalArgumentException("Invalid view type: " + viewType);
-        }
+    public HostUrlAdapter(Context context, List<Host> hosts) {
+        super(hosts);
+        this.context = context;
+        this.hosts = hosts;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Object item = getItem(position);
-        if (holder instanceof HostViewHolder && item instanceof Host) {
-            Host host = (Host) item;
-            ((HostViewHolder) holder).bind(host);
-        } else if (holder instanceof UrlViewHolder && item instanceof Url) {
-            Url url = (Url) item;
-            ((UrlViewHolder) holder).bind(url);
-        } else {
-            Log.e(TAG, "onBindViewHolder: Invalid item type or holder type at position: " + position);
-        }
+    public HostViewHolder onCreateHostViewHolder(ViewGroup parent, int viewType) {
+        ItemHostBinding binding = ItemHostBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+        return new HostViewHolder(binding);
     }
 
     @Override
-    public int getItemViewType(int position) {
-        Object item = getItem(position);
-        if (item instanceof Host) {
-            return VIEW_TYPE_HOST;
-        } else if (item instanceof Url) {
-            return VIEW_TYPE_URL;
-        } else {
-            Log.e(TAG, "getItemViewType: Invalid item type at position: " + position);
-            return -1;
-        }
+    public UrlViewHolder onCreateChildViewHolder(ViewGroup parent, int viewType) {
+        ItemUrlBinding binding = ItemUrlBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+        return new UrlViewHolder(binding);
     }
 
     @Override
-    public int getItemCount() {
-        int count = 0;
-        for (Host host : hostList) {
-            count++;
-            if (host.isExpanded()) {
-                count += host.getUrls().size();
+    public void onBindHostViewHolder(HostViewHolder holder, int flatPosition, ExpandableGroup group) {
+        Host host = (Host) group;
+        holder.binding.hostNameTextview.setText(host.name);
+
+        holder.itemView.setOnClickListener(v -> {
+            host.isExpanded = !host.isExpanded;
+            notifyItemChanged(flatPosition); // Important!
+            if (host.isExpanded) {
+                holder.binding.urlRecyclerview.setVisibility(View.VISIBLE);
+                holder.binding.urlRecyclerview.setLayoutManager(new LinearLayoutManager(context));
+                UrlAdapter urlAdapter = new UrlAdapter(host.getUrls()); // Use the nested adapter
+                holder.binding.urlRecyclerview.setAdapter(urlAdapter);
+            } else {
+                holder.binding.urlRecyclerview.setVisibility(View.GONE);
             }
-        }
-        return count;
+        });
+
+        holder.binding.hostCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // Handle host checkbox changes here
+        });
     }
 
-    /**
-     * Retrieves the item (Host or Url) at the specified position in the RecyclerView.
-     *
-     * @param position The position of the item in the RecyclerView.
-     * @return The Host or Url object at the specified position, or null if the position is invalid.
-     */
-    private Object getItem(int position) {
-        int currentPosition = 0;
-        for (Host host : hostList) {
-            if (currentPosition == position) {
-                return host;
-            }
-            currentPosition++;
-            if (host.isExpanded()) {
-                int urlsSize = host.getUrls().size();
-                if (position < currentPosition + urlsSize) {
-                    return host.getUrls().get(position - currentPosition);
-                }
-                currentPosition += urlsSize;
-            }
-        }
-        Log.e(TAG, "getItem: Invalid position: " + position);
-        return null;
+    @Override
+    public void onBindChildViewHolder(UrlViewHolder holder, int flatPosition, ExpandableGroup group, int childIndex) {
+        Url child = group.getUrls().get(childIndex);
+        holder.binding.urlNameTextview.setText(child.childText);
+
+        holder.binding.urlCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // Handle URL checkbox changes here
+        });
     }
 
-    // ViewHolder for Host items
-    public static class HostViewHolder extends RecyclerView.ViewHolder {
-        private final TextView hostNameTextView;
+    public class HostViewHolder extends RecyclerView.ViewHolder {
+        ItemHostBinding binding;
 
-        public HostViewHolder(View itemView) {
-            super(itemView);
-            hostNameTextView = itemView.findViewById(R.id.hostNameTextView); // Replace with your actual ID
-        }
-
-        public void bind(Host host) {
-            hostNameTextView.setText(host.getName()); // Replace with your actual method to get the host name
+        public HostViewHolder(ItemHostBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
     }
 
-    // ViewHolder for Url items
-    public static class UrlViewHolder extends RecyclerView.ViewHolder {
-        private final TextView urlTextView;
+    public class UrlViewHolder extends RecyclerView.ViewHolder {
+        ItemUrlBinding binding;
 
-        public UrlViewHolder(View itemView) {
-            super(itemView);
-            urlTextView = itemView.findViewById(R.id.urlTextView); // Replace with your actual ID
+        public UrlViewHolder(ItemUrlBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+    }
+
+
+    private class UrlAdapter extends RecyclerView.Adapter<UrlViewHolder> {
+        private List<Url> urls;
+
+        public UrlAdapter(List<Url> urls) {
+            this.urls = urls;
         }
 
-        public void bind(Url url) {
-            urlTextView.setText(url.getUrl()); // Replace with your actual method to get the UR
+        @NonNull
+        @Override
+        public UrlViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            ItemUrlBinding binding = ItemUrlBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+            return new UrlViewHolder(binding);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull UrlViewHolder holder, int position) {
+            Url url = urls.get(position);
+            holder.binding.urlNameTextview.setText(url.childText);
+        }
+
+        @Override
+        public int getItemCount() {
+            return urls.size();
         }
     }
 }

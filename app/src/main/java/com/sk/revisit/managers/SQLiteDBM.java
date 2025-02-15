@@ -109,7 +109,7 @@ public class SQLiteDBM {
      * @param url The URL to look up.
      * @return A map containing the file path, last modified timestamp, and ETag, or null if not found.
      */
-    public Map<String, String> selectAllFromUrlWhereUrl(String url) {
+    public Map<String, String> selectAllFromUrlsWhereUrl(String url) {
         Map<String, String> details = null;
         Cursor cursor = null;
         try {
