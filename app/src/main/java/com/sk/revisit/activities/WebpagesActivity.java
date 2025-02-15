@@ -2,13 +2,14 @@ package com.sk.revisit.activities;
 
 import android.os.Bundle;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.sk.revisit.R;
-import com.sk.revisit.data.Host;
+import com.sk.revisit.databinding.ActivityWebpagesBinding;
 import com.sk.revisit.managers.MySettingsManager;
 import com.sk.revisit.managers.SQLiteDBM;
 
@@ -16,39 +17,48 @@ import java.util.Set;
 
 public class WebpagesActivity extends AppCompatActivity {
 
+    ActivityWebpagesBinding binding;
     public SQLiteDBM dbm;
     RecyclerView recyclerView;
     MySettingsManager settingsManager;
-
     Set<String> hosts;
+    Button webpagesRefresh ;
+
     @Override
     protected void onCreate(Bundle arg0) {
         super.onCreate(arg0);
-        setContentView(R.layout.activity_webpages);
+        binding = ActivityWebpagesBinding.inflate(getLayoutInflater());
+
+        setContentView(binding.getRoot());
+
         settingsManager = new MySettingsManager(this);
         dbm = new SQLiteDBM(this, settingsManager.getRootStoragePath());
-        recyclerView=findViewById(R.id.recyclerView);
+
+        webpagesRefresh = binding.webpagesRefresh;
+        recyclerView = binding.webpagesHosts;
     }
 
-    void loadDownloadedHost(){
-        hosts=dbm.getDownloadedHosts();
-        recyclerView.setAdapter(new RecyclerView.Adapter() {
+    void loadDownloadedHost() {
+        hosts = dbm.selectUniqueHostFromUrls();
+        recyclerView.setAdapter(new MyRecyclerAdapter());
+    }
 
-            @NonNull
-            @Override
-            public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                return null;
-            }
+    private static class MyRecyclerAdapter extends RecyclerView.Adapter {
 
-            @Override
-            public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        @NonNull
+        @Override
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return null;
+        }
 
-            }
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 
-            @Override
-            public int getItemCount() {
-                return 0;
-            }
-        });
+        }
+
+        @Override
+        public int getItemCount() {
+            return 0;
+        }
     }
 }

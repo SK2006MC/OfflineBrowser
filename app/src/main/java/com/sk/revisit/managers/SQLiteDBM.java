@@ -80,7 +80,7 @@ public class SQLiteDBM {
      * @param etag         The ETag.
      * @return The row ID of the newly inserted row, or -1 if an error occurred.
      */
-    public long storeUrl(Uri url, String filePath, long fileSize, String lastModified, String etag) {
+    public long insertIntoUrls(Uri url, String filePath, long fileSize, String lastModified, String etag) {
         long id = -1;
         try {
             open();
@@ -109,7 +109,7 @@ public class SQLiteDBM {
      * @param url The URL to look up.
      * @return A map containing the file path, last modified timestamp, and ETag, or null if not found.
      */
-    public Map<String, String> getStoredUrlDetails(String url) {
+    public Map<String, String> selectAllFromUrlWhereUrl(String url) {
         Map<String, String> details = null;
         Cursor cursor = null;
         try {
@@ -145,7 +145,7 @@ public class SQLiteDBM {
      * @param url The URL to download.
      * @return The row ID of the newly inserted row, or -1 if an error occurred.
      */
-    public long addDownloadRequest(Uri url) {
+    public long insertIntoQue(Uri url) {
         long id = -1;
         try {
             open();
@@ -169,7 +169,7 @@ public class SQLiteDBM {
      *
      * @return A set of hostnames.
      */
-    public Set<String> getDownloadedHosts() {
+    public Set<String> selectUniqueHostFromUrls() {
         Set<String> hosts = new HashSet<>();
         Cursor cursor = null;
         try {
@@ -197,7 +197,7 @@ public class SQLiteDBM {
      *
      * @return A list of URLs.
      */
-    public ArrayList<String> getDownloadedUrls() {
+    public ArrayList<String> selectUrlFromUrls() {
         ArrayList<String> urls = new ArrayList<>();
         Cursor cursor = null;
         try {

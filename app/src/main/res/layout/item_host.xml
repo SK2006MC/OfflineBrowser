@@ -6,25 +6,30 @@
     android:orientation="horizontal">
 
     <CheckBox
-        android:id="@+id/hcb"
+        android:id="@+id/host_checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/htv"
+        android:id="@+id/host_text"
         android:layout_weight="1"
         android:layout_width="0dp"
         android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/hsize"
+        android:id="@+id/host_size"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
     <ProgressBar
-        android:id="@+id/hpb"
+        android:id="@+id/host_progressbar"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/urls"/>
 
 </LinearLayout>
