@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 
@@ -25,14 +26,15 @@ public class WebStorageManager {
 
     private final MySettingsManager settingsManager;
     private final MyUtils utils;
-    public MyDNListener dnListener;
     private static final String TAG = "WebStorageManager";
     private static final String GET_METHOD = "GET";
     private static final String UTF_8 = "UTF-8";
+	SQLiteDBM dbm;
 
     public WebStorageManager(Context context, MyUtils utils) {
         this.settingsManager = new MySettingsManager(context);
         this.utils = utils;
+        this.dbm = utils.dbm;
     }
 
     /**
@@ -43,6 +45,7 @@ public class WebStorageManager {
      */
     @Nullable
     public WebResourceResponse getResponse(WebResourceRequest request) {
+		
         if (!GET_METHOD.equals(request.getMethod())) {
             Log.d(TAG, "Request method is not GET, ignoring: " + request.getMethod());
             return null;
@@ -60,18 +63,44 @@ public class WebStorageManager {
         File localFile = new File(localPath);
 
         if (localFile.exists()) {
-            if (shouldUpdateLocalFile(uri, localPath)) {
-                Log.d(TAG, "Updating local file: " + localPath);
-                utils.download(uri,dnListener);
-            } else {
-                Log.d(TAG, "Loading from local file: " + localPath);
-            }
+			if(utils.isInternetAvailable()){
+				if (shouldUpdateLocalFile(uri, localPath)) {
+					Log.d(TAG, "Updating local file: " + localPath);
+					utils.download(uri,new MyUtils.DownloadListener(){
+						
+						@Override
+						public void onSuccess(File file){
+							dbm.insertIntoUrlsIfNotExists(uri,localPath,file.length(),null,null);
+						}
+						
+						@Override
+						public void onFailure(Exception e){
+							dbm.insertIntoQue(uri);
+						}
+					});
+				}
+			}
+			Log.d(TAG, "Loading from local file: " + localPath);
+			return loadFromLocal(localFile);
         } else {
-            Log.d(TAG, "Local file does not exist, downloading: " + localPath);
-            utils.download(uri,dnListener);
+			if(utils.isInternetAvailable()){
+				Log.d(TAG, "Local file does not exist, downloading: " + localPath);
+				utils.download(uri,new MyUtils.DownloadListener(){
+						
+						@Override
+						public void onSuccess(File file){
+							dbm.insertIntoUrlsIfNotExists(uri,localPath,file.length(),null,null);
+						}
+						
+						@Override
+						public void onFailure(Exception e){
+							dbm.insertIntoQue(uri);
+						}
+					});
+			}
+			dbm.insertIntoQue(uri);
+            return new WebResourceResponse("text/html", UTF_8,new ByteArrayInputStream("err refresh".getBytes()));
         }
-
-        return loadFromLocal(localFile);
     }
 
     /**
@@ -122,18 +151,5 @@ public class WebStorageManager {
             type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         }
         return type != null ? type : "application/octet-stream";
-    }
-
-    private static class MyDNListener implements MyUtils.DownloadListener{
-
-        @Override
-        public void onSuccess(File file) {
-
-        }
-
-        @Override
-        public void onFailure(Exception e) {
-
-        }
     }
 }

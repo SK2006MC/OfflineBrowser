@@ -6,14 +6,17 @@ import android.os.PersistableBundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.sk.revisit.R;
+import com.sk.revisit.databinding.ActivitySettingsBinding;
 
 public class SettingsActivity extends AppCompatActivity {
 
-
+    ActivitySettingsBinding binding;
     @Override
     public void onCreate(Bundle savedInstanceState, PersistableBundle persistentState) {
         super.onCreate(savedInstanceState, persistentState);
-        setContentView(R.layout.activity_settings);
+        binding=ActivitySettingsBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
     }
 
 }

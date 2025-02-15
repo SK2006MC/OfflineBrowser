@@ -1,7 +1,10 @@
 package com.sk.revisit.activities;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebSettings;
@@ -19,6 +22,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import com.sk.revisit.MyUtils;
 import com.sk.revisit.R;
+import com.sk.revisit.databinding.ActivityMainBinding;
 import com.sk.revisit.jsact.JSConsoleLogger;
 import com.sk.revisit.jsact.JSWebViewManager;
 import com.sk.revisit.jsv2.JSAutoCompleteTextView;
@@ -26,58 +30,80 @@ import com.sk.revisit.webview.MyWebViewClient;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText url;
-    WebView webView;
-    NavigationView navigationView;
-    LinearLayout jsNav;
-    JSConsoleLogger jsLogger;
-    JSWebViewManager jsManager;
-    View headerView;
-    ScrollView jsScrollView;
-    LinearLayout jsLinearLayout;
-    DrawerLayout drawerLayout;
-    JSAutoCompleteTextView jsTextView;
-    ImageButton jsButton;
-    MyUtils myUtils;
+    // UI Elements - Use more descriptive names
+    private EditText urlEditText;
+    private WebView mainWebView;
+    private NavigationView mainNavigationView;
+    private ScrollView jsConsoleScrollView;
+    private LinearLayout jsConsoleLayout;
+    private DrawerLayout mainDrawerLayout;
+    private JSAutoCompleteTextView jsInputTextView;
+    private ImageButton executeJsButton;
+
+    // Managers and Utilities
+    private JSConsoleLogger jsConsoleLogger;
+    private JSWebViewManager jsWebViewManager;
+    private MyUtils myUtils;
+
+    // Binding
+    private ActivityMainBinding binding;
+
+    // Network Status - Use a more descriptive name
+    private static boolean isNetworkAvailable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        drawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.myNav);
-        headerView = navigationView.getHeaderView(0);
-        url = headerView.findViewById(R.id.urlEditText);
-        webView = findViewById(R.id.myWebView);
+        // Initialize UI elements using binding
+        initializeUI();
 
-        myUtils = new MyUtils(getObbDir().getAbsolutePath());
+        // Initialize Managers and Utilities
+        myUtils = new MyUtils(this, getObbDir().getAbsolutePath());
+        jsConsoleLogger = new JSConsoleLogger(this, jsConsoleLayout, jsConsoleScrollView);
+        jsWebViewManager = new JSWebViewManager(this, mainWebView, jsConsoleLogger);
 
+        // Initialize components
+        initNetworkChangeListener();
         initJSConsole();
-        initNavView(navigationView);
-        initWebView(webView);
-        initUrlEditText(url, webView);
+        initNavView(mainNavigationView);
+        initWebView(mainWebView);
+        initUrlEditText(urlEditText, mainWebView);
 
-        jsTextView.setWebView(webView);
+        jsInputTextView.setWebView(mainWebView);
     }
 
-    void initJSConsole() {
-        jsNav = findViewById(R.id.jsnav);
-        jsTextView = findViewById(R.id.js_input);
-        jsLinearLayout = findViewById(R.id.console_layout);
-        jsScrollView = findViewById(R.id.console_scroll_view);
-        jsLogger = new JSConsoleLogger(this, jsLinearLayout, jsScrollView);
-        jsButton = findViewById(R.id.execute_js_btn);
-        jsManager = new JSWebViewManager(this, webView, jsLogger);
+    private void initializeUI() {
+        mainDrawerLayout = binding.drawerLayout;
+        mainNavigationView = binding.myNav;
+        View headerView = mainNavigationView.getHeaderView(0);
+        urlEditText = headerView.findViewById(R.id.urlEditText);
+        mainWebView = binding.myWebView;
+        jsInputTextView = binding.jsInput;
+        jsConsoleLayout = binding.consoleLayout;
+        jsConsoleScrollView = binding.consoleScrollView;
+        executeJsButton = binding.executeJsBtn;
+    }
 
-        jsButton.setOnClickListener(v -> {
-            String code = jsTextView.getText().toString();
-            jsManager.executeJS(code, r -> jsLogger.logConsoleMessage(r));
+    private void initNetworkChangeListener() {
+
+    }
+
+    private void initJSConsole() {
+        executeJsButton.setOnClickListener(v -> {
+            String code = jsInputTextView.getText().toString();
+            jsWebViewManager.executeJS(code, r -> jsConsoleLogger.logConsoleMessage(">" + code + "\n" + r + "\n"));
         });
 
+        executeJsButton.setOnLongClickListener(arg0 -> {
+            jsConsoleLayout.removeAllViewsInLayout();
+            return true; // Consume the long click event
+        });
     }
 
-    void initNavView(@NonNull NavigationView navigationView) {
+    private void initNavView(@NonNull NavigationView navigationView) {
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_dn) {
@@ -90,67 +116,70 @@ public class MainActivity extends AppCompatActivity {
                 startMyActivity(AboutActivity.class);
             } else if (id == R.id.nav_web) {
                 startMyActivity(WebpagesActivity.class);
+            } else if (id == R.id.nav_log) {
+                startMyActivity(LogActivity.class);
             }
-            return false;
+            // Return true to indicate that the item selection is handled
+            return true;
         });
     }
 
-    void initUrlEditText(@NonNull EditText url, WebView webView) {
-        url.setOnFocusChangeListener((a, b) -> {
+    private void initUrlEditText(@NonNull EditText urlEditText, WebView webView) {
+        urlEditText.setOnFocusChangeListener((view, hasFocus) -> {
+            if (hasFocus) return; // Only load URL when focus is lost
             try {
-                webView.loadUrl(url.getText().toString());
+                webView.loadUrl(urlEditText.getText().toString());
             } catch (Exception e) {
-                alert(e.toString());
+                showAlert(e.toString());
             }
         });
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    void initWebView(@NonNull WebView wv) {
-        wv.setWebViewClient(new MyWebViewClient(this,myUtils));
-        WebSettings set = wv.getSettings();
-        set.setAllowContentAccess(true);
-        set.setAllowFileAccess(true);
-        set.setAllowFileAccessFromFileURLs(true);
-        set.setAllowUniversalAccessFromFileURLs(true);
-        set.setDatabaseEnabled(true);
-//        set.setDatabasePath(getExternalFilesDir(null).getAbsolutePath());
-        set.setDomStorageEnabled(true);
-        set.setJavaScriptCanOpenWindowsAutomatically(true);
-        set.setJavaScriptEnabled(true);
-        set.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        set.setOffscreenPreRaster(true);
-        set.setUseWideViewPort(true);
-//        set.setUserAgentString();
+    private void initWebView(@NonNull WebView webView) {
+        webView.setWebViewClient(new MyWebViewClient(this, myUtils));
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setAllowContentAccess(true);
+        webSettings.setAllowFileAccess(true);
+        webSettings.setAllowFileAccessFromFileURLs(true);
+        webSettings.setAllowUniversalAccessFromFileURLs(true);
+        webSettings.setDatabaseEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        webSettings.setUseWideViewPort(true);
+        // webSettings.setUserAgentString(); // Consider setting a custom User-Agent if needed
     }
 
     @Override
     public void onBackPressed() {
         try {
-            if (drawerLayout.isDrawerOpen(navigationView)) {
-                drawerLayout.closeDrawer(navigationView);
-            } else if (drawerLayout.isDrawerOpen(R.id.jsnav)) {
-                drawerLayout.closeDrawer(R.id.jsnav);
-            } else if (webView.canGoBack()) {
-                webView.goBack();
+            if (mainDrawerLayout.isDrawerOpen(mainNavigationView)) {
+                mainDrawerLayout.closeDrawer(mainNavigationView);
+            } else if (mainDrawerLayout.isDrawerOpen(R.id.jsnav)) {
+                mainDrawerLayout.closeDrawer(R.id.jsnav);
+            } else if (mainWebView.canGoBack()) {
+                mainWebView.goBack();
             } else {
                 super.onBackPressed();
             }
         } catch (Exception e) {
-            alert(e.toString());
+            showAlert(e.toString());
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
     }
 
-    void startMyActivity(Class c) {
-        startActivity(new Intent(this, c));
+    private void startMyActivity(Class<?> activityClass) {
+        startActivity(new Intent(this, activityClass));
     }
 
-    void alert(String s) {
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+    private void showAlert(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }

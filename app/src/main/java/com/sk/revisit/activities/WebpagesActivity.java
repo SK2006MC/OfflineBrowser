@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.sk.revisit.R;
 import com.sk.revisit.databinding.ActivityWebpagesBinding;
 import com.sk.revisit.managers.MySettingsManager;
 import com.sk.revisit.managers.SQLiteDBM;

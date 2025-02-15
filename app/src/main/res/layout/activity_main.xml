@@ -22,7 +22,7 @@
         android:id="@+id/jsnav"
         android:layout_width="240dp"
         android:layout_height="match_parent"
-        android:layout_gravity="center"
+        android:layout_gravity="end"
         android:background="#FFFFFF"
         android:orientation="vertical">
 

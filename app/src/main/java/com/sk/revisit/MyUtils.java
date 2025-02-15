@@ -3,6 +3,12 @@ package com.sk.revisit;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,6 +21,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -23,20 +38,26 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
+import com.sk.revisit.managers.SQLiteDBM;
+
 public class MyUtils {
     private static final String TAG = "MyUtils";
     private static final int MAX_THREADS = 5;
     private static final String INDEX_HTML = "index.html";
     private static final long INVALID_SIZE = -1;
 
-    private final String rootPath;
+    final String rootPath;
     private final ExecutorService executorService;
     private final OkHttpClient client;
+	Context context;
+	public final SQLiteDBM dbm;
 
-    public MyUtils(String rootPath) {
+    public MyUtils(Context context,String rootPath) {
         this.rootPath = rootPath;
+		this.context = context;
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.client = new OkHttpClient();
+		this.dbm=new SQLiteDBM(context,rootPath+"/revisit.db");
     }
 
     /**

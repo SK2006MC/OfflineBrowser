@@ -1,4 +1,5 @@
 package com.sk.revisit.managers;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -6,6 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,7 +83,7 @@ public class SQLiteDBM {
      * @param etag         The ETag.
      * @return The row ID of the newly inserted row, or -1 if an error occurred.
      */
-    public long insertIntoUrls(Uri url, String filePath, long fileSize, String lastModified, String etag) {
+    public long insertIntoUrlsIfNotExists(@NonNull Uri url, String filePath, long fileSize, String lastModified, String etag) {
         long id = -1;
         try {
             open();
