@@ -41,7 +41,7 @@ public class MyUtils {
     private final OkHttpClient client;
     public final Context context;
 
-    MyLogManager myLogManager;
+    MyLogManager myLogManager,req,resp;
 
     public MyUtils(Context context, String rootPath) {
         this.rootPath = rootPath;
@@ -50,6 +50,20 @@ public class MyUtils {
         this.client = new OkHttpClient();
         this.dbm = new SQLiteDBM(context, rootPath + "/revisit.db");
         this.myLogManager=new MyLogManager(context,rootPath+"/log.txt");
+        this.req=new MyLogManager(context,rootPath+"/req.txt");
+        this.resp=new MyLogManager(context,rootPath+"/saved.txt");
+    }
+
+    public void log(String msg){
+        myLogManager.log(msg);
+    }
+
+    public void saveReq(String m){
+        req.log(m);
+    }
+
+    public void saveResp(String m){
+        resp.log(m);
     }
 
     /**

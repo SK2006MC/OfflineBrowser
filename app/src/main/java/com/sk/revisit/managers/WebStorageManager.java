@@ -65,11 +65,13 @@ public class WebStorageManager {
 
                         @Override
                         public void onSuccess(File file, Headers headers) {
+                            utils.saveResp(uriStr+"|"+localPath+"|"+file.length()+"|"+headers.toString());
                            // dbm.insertIntoUrlsIfNotExists(uri, localPath, file.length(), headers);
                         }
 
                         @Override
                         public void onFailure(Exception e) {
+                            utils.saveReq(uriStr);
                             //dbm.insertIntoQueIfNotExists(uri);
                         }
                     });
@@ -84,11 +86,13 @@ public class WebStorageManager {
 
                     @Override
                     public void onSuccess(File file, Headers headers) {
+                        utils.saveResp(uriStr+"|"+localPath+"|"+file.length()+"|"+headers.toString());
                         //dbm.insertIntoUrlsIfNotExists(uri, localPath, file.length(), headers);
                     }
 
                     @Override
                     public void onFailure(Exception e) {
+                        utils.saveReq(uriStr);
                         //dbm.insertIntoQueIfNotExists(uri);
                     }
                 });

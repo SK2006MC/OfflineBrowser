@@ -14,9 +14,8 @@ public class SettingsActivity extends AppCompatActivity {
     MySettingsManager settingsManager;
 
     @Override
-    public void onCreate(Bundle savedInstanceState, PersistableBundle persistentState) {
-        super.onCreate(savedInstanceState, persistentState);
-		
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 		
