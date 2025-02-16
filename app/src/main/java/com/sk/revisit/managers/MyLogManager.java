@@ -11,8 +11,8 @@ public class MyLogManager {
 
     final File file;
     final String filePath;
-    FileWriter fw;
     final Context c;
+    FileWriter fw;
 
     MyLogManager(Context c, String filePath) {
         this.filePath = filePath;

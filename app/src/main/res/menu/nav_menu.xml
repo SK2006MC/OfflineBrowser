@@ -1,5 +1,4 @@
-<menu xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/nav_web"
@@ -15,7 +14,7 @@
         android:title="@string/settings" />
     <item
         android:id="@+id/nav_log"
-        android:title="@string/title_log"/>
+        android:title="@string/title_log" />
     <item
         android:id="@+id/nav_about"
         android:title="@string/about" />

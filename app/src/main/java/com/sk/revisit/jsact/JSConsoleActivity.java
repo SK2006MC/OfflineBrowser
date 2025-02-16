@@ -13,7 +13,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
 
-import com.sk.revisit.R;
+import com.sk.revisit.databinding.ActivityJsconsoleBinding;
 import com.sk.revisit.jsv2.JSAutoCompleteTextView;
 
 import java.util.ArrayList;
@@ -22,12 +22,10 @@ import java.util.regex.Pattern;
 
 public class JSConsoleActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
     private static final Pattern QUOTE_REMOVAL_PATTERN = Pattern.compile("^\"|\"$");
-    private static final String JS_INTERFACE_NAME = "Android";
     private final List<String> jsCodeHistory = new ArrayList<>();
+    ActivityJsconsoleBinding binding;
     private WebView webView;
-    private DrawerLayout drawerLayout;
     private LinearLayout consoleLayout;
     private ScrollView consoleScrollView;
     private JSAutoCompleteTextView jsInput;
@@ -38,7 +36,8 @@ public class JSConsoleActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityJsconsoleBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         initializeViews();
         jsWebViewManager = new JSWebViewManager(this, webView, jsLogger);
@@ -56,28 +55,20 @@ public class JSConsoleActivity extends AppCompatActivity {
                 }
             }
         });
+
+        setupExecuteButton();
     }
 
     private void initializeViews() {
-        webView = findViewById(R.id.myWebView);
-    /*drawerLayout = findViewById(R.id.);
-    consoleLayout = findViewById(R.id.myWebView);
-    consoleScrollView = findViewById(R.id.myWebView);
-    jsInput = findViewById(R.id.myWebView);
-    executeJsButton = findViewById(R.id.myWebView);*/
+        webView = binding.webView;
+        consoleLayout = binding.consoleLayout;
+        consoleScrollView = binding.consoleScrollView;
+        jsInput = binding.jsInput;
+        executeJsButton = binding.executeJs;
     }
 
     private void setupExecuteButton() {
-    /*executeJsButton.setOnClickListener(
-        v -> {
-          String jsCode = jsInput.getText().toString().trim();
-          if (!jsCode.isEmpty()) {
-            jsCodeHistory.add(jsCode);
-            jsInput.adapter.notifyDataSetChanged();
-            executeJS(jsCode);
-            jsInput.setText("");
-          }
-        });*/
+
         executeJsButton.setOnClickListener(v -> executeUserJS());
         executeJsButton.setOnLongClickListener(
                 arg0 -> {

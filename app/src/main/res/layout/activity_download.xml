@@ -17,8 +17,7 @@
         <TextView
             android:id="@+id/size"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="size" />
+            android:layout_height="wrap_content" />
     </android.widget.LinearLayout>
 
     <LinearLayout
@@ -47,8 +46,7 @@
         <TextView
             android:id="@+id/prog"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="progress" />
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
 </LinearLayout>

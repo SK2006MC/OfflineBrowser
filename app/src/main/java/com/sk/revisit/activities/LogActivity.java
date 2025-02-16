@@ -4,7 +4,6 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.sk.revisit.R;
 import com.sk.revisit.databinding.ActivityLogBinding;
 
 class LogActivity extends AppCompatActivity {

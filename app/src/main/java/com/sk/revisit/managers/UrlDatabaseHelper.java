@@ -46,13 +46,13 @@ public class UrlDatabaseHelper {
      * @return The ID of the inserted or existing URL, or -1 if an error occurred.
      */
     public long insertOrGetUrlId(@NonNull Uri url, String filePath, long fileSize, String lastModified, String etag) {
-        long id = -1;
+        long id;
         try {
             open();
             // Check if the URL already exists
             id = getUrlIdIfExists(url);
             if (id != -1) {
-                Log.d(TAG, "URL already exists: " + url.toString() + " with ID: " + id);
+                Log.d(TAG, "URL already exists: " + url + " with ID: " + id);
                 return id; // Return the existing ID
             }
 
@@ -68,9 +68,9 @@ public class UrlDatabaseHelper {
             id = db.insert(TABLE_STORED_URLS, null, values);
 
             if (id == -1) {
-                Log.e(TAG, "Failed to insert URL: " + url.toString());
+                Log.e(TAG, "Failed to insert URL: " + url);
             } else {
-                Log.d(TAG, "Inserted URL: " + url.toString() + " with ID: " + id);
+                Log.d(TAG, "Inserted URL: " + url + " with ID: " + id);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error during database operation", e);

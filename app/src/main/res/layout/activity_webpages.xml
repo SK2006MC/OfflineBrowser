@@ -4,14 +4,14 @@
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/webpages_refresh"
+        android:id="@+id/webpages_refresh_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/refresh" />
 
     <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/webpages_hosts"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/webpages_hosts"/>
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

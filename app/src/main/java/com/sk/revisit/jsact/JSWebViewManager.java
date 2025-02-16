@@ -55,8 +55,8 @@ public class JSWebViewManager {
     }
 
     public static class WebAppInterface {
-        private final Context mContext;
         final WebView webview;
+        private final Context mContext;
 
         WebAppInterface(Context c, WebView webview) {
             mContext = c;

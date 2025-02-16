@@ -9,15 +9,12 @@ import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.core.os.ExecutorCompat;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,8 +26,6 @@ public class SQLiteDBM {
 
     private static final String DATABASE_NAME = "revisit_web_db";
     private static final int DATABASE_VERSION = 2;
-    private final String customDatabasePath;
-
     // Table: Stored URLs
     private static final String TABLE_STORED_URLS = "stored_urls";
     private static final String COLUMN_ID = "id";
@@ -41,16 +36,15 @@ public class SQLiteDBM {
     private static final String COLUMN_LAST_MODIFIED = "last_modified";
     private static final String COLUMN_HEADERS = "headers";
     private static final String COLUMN_ETAG = "etag";
-
     // Table: Download Requests
     private static final String TABLE_DOWNLOAD_REQUESTS = "download_requests";
     private static final String COLUMN_REQUEST_ID = "id";
     private static final String COLUMN_REQUEST_URL = "url";
     private static final String COLUMN_REQUEST_HOST = "host";
-
+    private final String customDatabasePath;
     private final DatabaseHelper dbHelper;
+    final ExecutorService executor;
     private SQLiteDatabase db;
-    ExecutorService executor;
 
     public SQLiteDBM(Context context, String customDatabasePath) {
         this.customDatabasePath = customDatabasePath;
@@ -86,13 +80,11 @@ public class SQLiteDBM {
      * @param url          The URL.
      * @param filePath     The local file path.
      * @param fileSize     The file size.
-     * @param lastModified The last modified timestamp.
-     * @param etag         The ETag.
-     * @return The row ID of the newly inserted row, or -1 if an error occurred.
+     * @param headers      The headers
      */
     public void insertIntoUrlsIfNotExists(@NonNull Uri url, String filePath, long fileSize, Headers headers) {
-        executor.execute(()->{
-            long id = -1;
+        executor.execute(() -> {
+            long id;
             try {
                 open();
                 ContentValues values = new ContentValues();
@@ -101,15 +93,13 @@ public class SQLiteDBM {
                 values.put(COLUMN_FILE_PATH, filePath);
                 values.put(COLUMN_FILE_SIZE, fileSize);
                 values.put(COLUMN_HEADERS, headers.toString());
-//                values.put(COLUMN_LAST_MODIFIED, lastModified);
-//                values.put(COLUMN_ETAG, etag);
 
-                id = db.insertWithOnConflict(TABLE_STORED_URLS, null, values,SQLiteDatabase.CONFLICT_IGNORE);
+                id = db.insertWithOnConflict(TABLE_STORED_URLS, null, values, SQLiteDatabase.CONFLICT_IGNORE);
 
                 if (id == -1) {
-                    Log.e(TAG, "Failed to insert URL: " + url.toString());
+                    Log.e(TAG, "Failed to insert URL: " + url);
                 } else {
-                    Log.d(TAG, "Inserted URL: " + url.toString() + " with ID: " + id);
+                    Log.d(TAG, "Inserted URL: " + url + " with ID: " + id);
                 }
             } finally {
                 close();
@@ -155,21 +145,20 @@ public class SQLiteDBM {
      * Adds a download request to the database.
      *
      * @param url The URL to download.
-     * @return The row ID of the newly inserted row, or -1 if an error occurred.
      */
     public void insertIntoQueIfNotExists(@NonNull Uri url) {
-        executor.execute(()->{
-            long id = -1;
+        executor.execute(() -> {
+            long id;
             try {
                 open();
                 ContentValues values = new ContentValues();
                 values.put(COLUMN_REQUEST_URL, url.toString());
                 values.put(COLUMN_REQUEST_HOST, url.getHost());
-                id = db.insertWithOnConflict(TABLE_DOWNLOAD_REQUESTS, null, values,SQLiteDatabase.CONFLICT_IGNORE);
+                id = db.insertWithOnConflict(TABLE_DOWNLOAD_REQUESTS, null, values, SQLiteDatabase.CONFLICT_IGNORE);
                 if (id == -1) {
-                    Log.e(TAG, "Failed to insert download request for URL: " + url.toString());
+                    Log.e(TAG, "Failed to insert download request for URL: " + url);
                 } else {
-                    Log.d(TAG, "Inserted download request for URL: " + url.toString() + " with ID: " + id);
+                    Log.d(TAG, "Inserted download request for URL: " + url + " with ID: " + id);
                 }
             } finally {
                 close();
@@ -234,7 +223,6 @@ public class SQLiteDBM {
     }
 
 
-
     /**
      * Database helper class for creating and managing the database.
      */
@@ -256,8 +244,6 @@ public class SQLiteDBM {
                     COLUMN_FILE_PATH + " TEXT, " +
                     COLUMN_FILE_SIZE + " INTEGER, " +
                     COLUMN_HEADERS + "TEXT" +
-//                    COLUMN_LAST_MODIFIED + " TEXT, " +
-//                    COLUMN_ETAG + " TEXT" +
                     ")");
 
             db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_DOWNLOAD_REQUESTS + " (" +
