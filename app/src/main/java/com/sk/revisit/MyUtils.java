@@ -3,6 +3,7 @@ package com.sk.revisit;
 import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -51,7 +52,7 @@ public class MyUtils {
         this.dbm = new SQLiteDBM(context, rootPath + "/revisit.db");
         this.myLogManager=new MyLogManager(context,rootPath+"/log.txt");
         this.req=new MyLogManager(context,rootPath+"/req.txt");
-        this.resp=new MyLogManager(context,rootPath+"/saved.txt");
+        this.resp=new MyLogManager(context,rootPath+"/saved.base64");
     }
 
     public void log(String msg){
@@ -63,7 +64,7 @@ public class MyUtils {
     }
 
     public void saveResp(String m){
-        resp.log(m);
+        resp.log(Base64.encode(m.getBytes(),0));
     }
 
     /**

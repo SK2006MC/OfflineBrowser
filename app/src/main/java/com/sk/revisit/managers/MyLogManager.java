@@ -22,7 +22,7 @@ public class MyLogManager {
             if(!file.exists()){
                 file.createNewFile();
             }
-            this.fos=new FileOutputStream(this.file);
+            this.fos=new FileOutputStream(this.file,true);
         } catch (Exception e) {
             alert(e.toString());
         }
@@ -31,6 +31,14 @@ public class MyLogManager {
     public void log(String msg) {
         try {
             fos.write(msg.getBytes());
+        } catch (IOException e) {
+            alert(e.toString());
+        }
+    }
+
+    public void log(byte[] b) {
+        try {
+            fos.write(b);
         } catch (IOException e) {
             alert(e.toString());
         }

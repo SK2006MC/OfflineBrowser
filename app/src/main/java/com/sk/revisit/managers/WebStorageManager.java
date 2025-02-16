@@ -98,6 +98,7 @@ public class WebStorageManager {
                 });
                 return loadFromLocal(localFile);
             }
+            utils.saveReq(uriStr);
             //dbm.insertIntoQueIfNotExists(uri);
             return new WebResourceResponse("text/html", UTF_8, new ByteArrayInputStream("no offline file  or err refresh".getBytes()));
         }

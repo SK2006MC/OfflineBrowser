@@ -28,6 +28,7 @@ import com.sk.revisit.databinding.ActivityMainBinding;
 import com.sk.revisit.jsact.JSConsoleLogger;
 import com.sk.revisit.jsact.JSWebViewManager;
 import com.sk.revisit.jsv2.JSAutoCompleteTextView;
+import com.sk.revisit.managers.MySettingsManager;
 import com.sk.revisit.webview.MyWebViewClient;
 
 public class MainActivity extends AppCompatActivity {
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private JSConsoleLogger jsConsoleLogger;
     private JSWebViewManager jsWebViewManager;
     private MyUtils myUtils;
-
+    MySettingsManager settingsManager;
     // Binding
     private ActivityMainBinding binding;
 
@@ -53,6 +54,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        settingsManager=new MySettingsManager(this);
+
+        if(settingsManager.getIsFirst()){
+            startMyActivity(FirstActivity.class);
+        }
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -145,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_web) {
                 startMyActivity(WebpagesActivity.class);
             } else if (id == R.id.nav_log) {
-                startMyActivity(MyLogActivity.class);
+                startMyActivity(LogActivity.class);
             }
             // Return true to indicate that the item selection is handled
             return true;
