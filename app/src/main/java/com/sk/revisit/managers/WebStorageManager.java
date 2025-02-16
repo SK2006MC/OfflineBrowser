@@ -1,6 +1,5 @@
 package com.sk.revisit.managers;
 
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 import android.webkit.URLUtil;
@@ -66,12 +65,12 @@ public class WebStorageManager {
 
                         @Override
                         public void onSuccess(File file, Headers headers) {
-                            dbm.insertIntoUrlsIfNotExists(uri, localPath, file.length(), headers);
+                           // dbm.insertIntoUrlsIfNotExists(uri, localPath, file.length(), headers);
                         }
 
                         @Override
                         public void onFailure(Exception e) {
-                            dbm.insertIntoQueIfNotExists(uri);
+                            //dbm.insertIntoQueIfNotExists(uri);
                         }
                     });
                 }
@@ -85,16 +84,16 @@ public class WebStorageManager {
 
                     @Override
                     public void onSuccess(File file, Headers headers) {
-                        dbm.insertIntoUrlsIfNotExists(uri, localPath, file.length(), headers);
+                        //dbm.insertIntoUrlsIfNotExists(uri, localPath, file.length(), headers);
                     }
 
                     @Override
                     public void onFailure(Exception e) {
-                        dbm.insertIntoQueIfNotExists(uri);
+                        //dbm.insertIntoQueIfNotExists(uri);
                     }
                 });
             }
-            dbm.insertIntoQueIfNotExists(uri);
+            //dbm.insertIntoQueIfNotExists(uri);
             return new WebResourceResponse("text/html", UTF_8, new ByteArrayInputStream("err refresh".getBytes()));
         }
     }

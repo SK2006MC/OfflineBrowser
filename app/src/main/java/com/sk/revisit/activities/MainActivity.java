@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView mainWebView;
     private NavigationView mainNavigationView;
     private ScrollView jsConsoleScrollView;
-    private LinearLayout jsConsoleLayout;
+    private LinearLayout jsConsoleLayout,bg;
     private DrawerLayout mainDrawerLayout;
     private JSAutoCompleteTextView jsInputTextView;
     private ImageButton executeJsButton;
@@ -84,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
         jsConsoleLayout = binding.consoleLayout;
         jsConsoleScrollView = binding.consoleScrollView;
         executeJsButton = binding.executeJsBtn;
+
+        bg=binding.myNav.getHeaderView(0).findViewById(R.id.bg);
     }
 
     private void initNetworkChangeListener() {
@@ -94,16 +96,29 @@ public class MainActivity extends AppCompatActivity {
             public void onAvailable(@NonNull Network network) {
                 super.onAvailable(network);
                 MyUtils.isNetworkAvailable = true;
+                chbg(MyUtils.isNetworkAvailable);
             }
 
             @Override
             public void onLost(@NonNull Network network) {
                 super.onLost(network);
                 MyUtils.isNetworkAvailable = false;
+                chbg(MyUtils.isNetworkAvailable);
             }
         });
     }
 
+    @SuppressLint("ResourceAsColor")
+    public void chbg(boolean o){
+        runOnUiThread(()->{
+            if(o){
+                bg.setBackgroundColor(R.color.black);
+            }else {
+                bg.setBackgroundColor(R.color.teal_700);
+            }
+
+        });
+    }
     private void initJSConsole() {
         executeJsButton.setOnClickListener(v -> {
             String code = jsInputTextView.getText().toString();

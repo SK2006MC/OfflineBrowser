@@ -4,7 +4,7 @@ import android.content.Context;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class MyLogManager {
@@ -12,14 +12,17 @@ public class MyLogManager {
     final File file;
     final String filePath;
     final Context c;
-    FileWriter fw;
+    FileOutputStream fos;
 
-    MyLogManager(Context c, String filePath) {
+    public MyLogManager(Context c, String filePath) {
         this.filePath = filePath;
         this.c = c;
         this.file = new File(this.filePath);
         try {
-            this.fw = new FileWriter(this.file);
+            if(!file.exists()){
+                file.createNewFile();
+            }
+            this.fos=new FileOutputStream(this.file);
         } catch (Exception e) {
             alert(e.toString());
         }
@@ -27,13 +30,13 @@ public class MyLogManager {
 
     public void log(String msg) {
         try {
-            fw.write(msg + '\n');
+            fos.write(msg.getBytes());
         } catch (IOException e) {
             alert(e.toString());
         }
     }
 
-    void alert(String msg) {
+    public void alert(String msg) {
         Toast.makeText(c, msg, Toast.LENGTH_LONG).show();
     }
 }

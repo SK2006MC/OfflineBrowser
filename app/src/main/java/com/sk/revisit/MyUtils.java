@@ -9,6 +9,7 @@ import android.webkit.MimeTypeMap;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.sk.revisit.managers.MyLogManager;
 import com.sk.revisit.managers.SQLiteDBM;
 
 import java.io.File;
@@ -35,10 +36,12 @@ public class MyUtils {
     private static final long INVALID_SIZE = -1;
     public static boolean isNetworkAvailable;
     public final SQLiteDBM dbm;
-    final String rootPath;
+    public final String rootPath;
     private final ExecutorService executorService;
     private final OkHttpClient client;
-    final Context context;
+    public final Context context;
+
+    MyLogManager myLogManager;
 
     public MyUtils(Context context, String rootPath) {
         this.rootPath = rootPath;
@@ -46,6 +49,7 @@ public class MyUtils {
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.client = new OkHttpClient();
         this.dbm = new SQLiteDBM(context, rootPath + "/revisit.db");
+        this.myLogManager=new MyLogManager(context,rootPath+"/log.txt");
     }
 
     /**
