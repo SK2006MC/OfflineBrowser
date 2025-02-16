@@ -33,6 +33,7 @@ import java.util.concurrent.TimeoutException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -51,10 +52,11 @@ public class MyUtils {
     private final OkHttpClient client;
 	Context context;
 	public final SQLiteDBM dbm;
+    public static boolean isNetworkAvailable;
 
     public MyUtils(Context context,String rootPath) {
         this.rootPath = rootPath;
-		this.context = context;
+        this.context = context;
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.client = new OkHttpClient();
 		this.dbm=new SQLiteDBM(context,rootPath+"/revisit.db");
@@ -86,7 +88,7 @@ public class MyUtils {
         if (lastPathSegment.contains(".")) {
             return localPath;
         } else {
-            return uri.toString().endsWith("/") ? localPath + File.separator + INDEX_HTML : localPath + File.separator + INDEX_HTML;
+            return uri.toString().endsWith("/") ? localPath +  INDEX_HTML : localPath + File.separator + INDEX_HTML;
         }
     }
 
@@ -195,7 +197,7 @@ public class MyUtils {
                                 out.write(buffer, 0, bytesRead);
                             }
                             Log.d(TAG, "Downloaded: " + uri + " to " + localFilePath);
-                            listener.onSuccess(localFile);
+                            listener.onSuccess(localFile,response.headers());
                         } catch (IOException e) {
                             Log.e(TAG, "Error writing to file: " + localFilePath, e);
                             listener.onFailure(e);
@@ -225,7 +227,7 @@ public class MyUtils {
          *
          * @param file The downloaded file.
          */
-        void onSuccess(File file);
+        void onSuccess(File file, Headers headers);
 
         /**
          * Called when the download fails.

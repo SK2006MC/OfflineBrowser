@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 
+import okhttp3.Headers;
+
 public class WebStorageManager {
 
     private final MySettingsManager settingsManager;
@@ -63,19 +65,19 @@ public class WebStorageManager {
         File localFile = new File(localPath);
 
         if (localFile.exists()) {
-			if(utils.isInternetAvailable()){
+			if(MyUtils.isNetworkAvailable){
 				if (shouldUpdateLocalFile(uri, localPath)) {
 					Log.d(TAG, "Updating local file: " + localPath);
 					utils.download(uri,new MyUtils.DownloadListener(){
 						
 						@Override
-						public void onSuccess(File file){
-							dbm.insertIntoUrlsIfNotExists(uri,localPath,file.length(),null,null);
+						public void onSuccess(File file,Headers headers){
+							dbm.insertIntoUrlsIfNotExists(uri,localPath,file.length(),headers);
 						}
 						
 						@Override
 						public void onFailure(Exception e){
-							dbm.insertIntoQue(uri);
+							dbm.insertIntoQueIfNotExists(uri);
 						}
 					});
 				}
@@ -83,22 +85,22 @@ public class WebStorageManager {
 			Log.d(TAG, "Loading from local file: " + localPath);
 			return loadFromLocal(localFile);
         } else {
-			if(utils.isInternetAvailable()){
+			if(MyUtils.isNetworkAvailable){
 				Log.d(TAG, "Local file does not exist, downloading: " + localPath);
 				utils.download(uri,new MyUtils.DownloadListener(){
 						
 						@Override
-						public void onSuccess(File file){
-							dbm.insertIntoUrlsIfNotExists(uri,localPath,file.length(),null,null);
+						public void onSuccess(File file, Headers headers){
+							dbm.insertIntoUrlsIfNotExists(uri,localPath,file.length(),headers);
 						}
 						
 						@Override
 						public void onFailure(Exception e){
-							dbm.insertIntoQue(uri);
+							dbm.insertIntoQueIfNotExists(uri);
 						}
 					});
 			}
-			dbm.insertIntoQue(uri);
+			dbm.insertIntoQueIfNotExists(uri);
             return new WebResourceResponse("text/html", UTF_8,new ByteArrayInputStream("err refresh".getBytes()));
         }
     }

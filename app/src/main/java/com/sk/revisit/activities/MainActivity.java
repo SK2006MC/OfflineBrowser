@@ -4,7 +4,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebSettings;
@@ -48,8 +51,6 @@ public class MainActivity extends AppCompatActivity {
     // Binding
     private ActivityMainBinding binding;
 
-    // Network Status - Use a more descriptive name
-    private static boolean isNetworkAvailable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +89,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initNetworkChangeListener() {
+        ConnectivityManager connectivityManager=(ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkRequest request = new NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR).addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build();
+        connectivityManager.registerNetworkCallback(request,new ConnectivityManager.NetworkCallback(){
+            @Override
+            public void onAvailable(@NonNull Network network) {
+                super.onAvailable(network);
+                MyUtils.isNetworkAvailable =true;
+            }
 
+            @Override
+            public void onLost(@NonNull Network network) {
+                super.onLost(network);
+                MyUtils.isNetworkAvailable =false;
+            }
+        });
     }
 
     private void initJSConsole() {
@@ -99,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 
         executeJsButton.setOnLongClickListener(arg0 -> {
             jsConsoleLayout.removeAllViewsInLayout();
-            return true; // Consume the long click event
+            return true;
         });
     }
 
@@ -172,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        myUtils.shutdown();
 
     }
 
