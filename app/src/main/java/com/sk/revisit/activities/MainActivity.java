@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_web) {
                 startMyActivity(WebpagesActivity.class);
             } else if (id == R.id.nav_log) {
-                startMyActivity(LogActivity.class);
+                startMyActivity(MyLogActivity.class);
             }
             // Return true to indicate that the item selection is handled
             return true;

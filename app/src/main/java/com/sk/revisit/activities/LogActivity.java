@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.sk.revisit.databinding.ActivityLogBinding;
 
-class LogActivity extends AppCompatActivity {
+class MyLogActivity extends AppCompatActivity {
 
     ActivityLogBinding binding;
 
