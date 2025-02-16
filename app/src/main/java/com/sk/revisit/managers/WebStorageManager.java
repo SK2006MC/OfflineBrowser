@@ -3,7 +3,6 @@ package com.sk.revisit.managers;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -26,12 +25,10 @@ public class WebStorageManager {
     private static final String TAG = "WebStorageManager";
     private static final String GET_METHOD = "GET";
     private static final String UTF_8 = "UTF-8";
-    private final MySettingsManager settingsManager;
     private final MyUtils utils;
     final SQLiteDBM dbm;
 
-    public WebStorageManager(Context context, MyUtils utils) {
-        this.settingsManager = new MySettingsManager(context);
+    public WebStorageManager(MyUtils utils) {
         this.utils = utils;
         this.dbm = utils.dbm;
     }
@@ -127,7 +124,7 @@ public class WebStorageManager {
             Log.e(TAG, "Local file does not exist or is not a file: " + localFile.getAbsolutePath());
             return null;
         }
-        String mimeType = getMimeType(localFile.getPath());
+        String mimeType = utils.getMimeType(localFile.getPath());
         try {
             InputStream fis = new FileInputStream(localFile);
             return new WebResourceResponse(mimeType, UTF_8, fis);
@@ -135,20 +132,5 @@ public class WebStorageManager {
             Log.e(TAG, "Error loading from local file: " + localFile.getAbsolutePath(), e);
             return null;
         }
-    }
-
-    /**
-     * Gets the MIME type of a file based on its extension.
-     *
-     * @param url The URL or file path.
-     * @return The MIME type, or "application/octet-stream" if unknown.
-     */
-    private String getMimeType(String url) {
-        String type = null;
-        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
-        if (extension != null) {
-            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-        }
-        return type != null ? type : "application/octet-stream";
     }
 }

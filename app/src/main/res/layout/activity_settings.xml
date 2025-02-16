@@ -11,4 +11,15 @@
         android:text="@string/settings"
         android:textSize="30sp" />
 
+    <TextView
+        android:textSize="25sp"
+        android:text="@string/title_rootpath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/rootPathTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
 </LinearLayout>

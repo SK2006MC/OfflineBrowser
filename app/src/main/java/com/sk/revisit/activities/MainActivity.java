@@ -32,7 +32,6 @@ import com.sk.revisit.webview.MyWebViewClient;
 
 public class MainActivity extends AppCompatActivity {
 
-    // UI Elements - Use more descriptive names
     private EditText urlEditText;
     private WebView mainWebView;
     private NavigationView mainNavigationView;
@@ -151,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void initWebView(@NonNull WebView webView) {
-        webView.setWebViewClient(new MyWebViewClient(this, myUtils));
+        webView.setWebViewClient(new MyWebViewClient(myUtils));
         WebSettings webSettings = webView.getSettings();
         webSettings.setAllowContentAccess(true);
         webSettings.setAllowFileAccess(true);

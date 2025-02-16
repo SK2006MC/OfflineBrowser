@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -77,20 +78,15 @@ public class MyUtils {
         }
     }
 
-    /**
-     * Gets the MIME type of a file.
-     *
-     * @param filePath The path to the file.
-     * @return The MIME type as a String, or null if an error occurs.
-     */
-    @Nullable
-    public String getMimeType(@NonNull String filePath) {
-        try {
-            return Files.probeContentType(Paths.get(filePath));
-        } catch (IOException e) {
-            Log.e(TAG, "Error getting MIME type for: " + filePath, e);
-            return null;
+
+    @NonNull
+    public String getMimeType(String url) {
+        String type = null;
+        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         }
+        return type != null ? type : "application/octet-stream";
     }
 
     /**

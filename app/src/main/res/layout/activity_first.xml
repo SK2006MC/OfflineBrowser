@@ -45,7 +45,7 @@
             android:text="@string/the_selected_location_is" />
 
         <TextView
-            android:id="@+id/rootPath"
+            android:id="@+id/rootPathTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 

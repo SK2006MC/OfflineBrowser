@@ -13,8 +13,8 @@ public class MyWebViewClient extends WebViewClient {
 
     final WebStorageManager webStorageManager;
 
-    public MyWebViewClient(Context context, MyUtils utils) {
-        webStorageManager = new WebStorageManager(context, utils);
+    public MyWebViewClient(MyUtils utils) {
+        webStorageManager = new WebStorageManager(utils);
     }
 
     @Override
