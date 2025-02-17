@@ -23,6 +23,16 @@
             android:text="@string/revisit"
             android:textColor="@android:color/white"
             android:textSize="18sp" />
+			
+        <TextView
+			android:id="@+id/inf"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/revisit"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+		
+		
     </LinearLayout>
 
     <EditText
@@ -32,5 +42,11 @@
         android:autofillHints="google.com"
         android:hint="@string/enter_a_url"
         android:inputType="textUri" />
+		
+	<Switch
+		android:id="@+id/su"
+		android:text="keep uptodate?"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>

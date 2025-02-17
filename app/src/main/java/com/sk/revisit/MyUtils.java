@@ -32,10 +32,11 @@ import okhttp3.ResponseBody;
 
 public class MyUtils {
     private static final String TAG = "MyUtils";
-    private static final int MAX_THREADS = 5;
+    private static final int MAX_THREADS = 8;
     private static final String INDEX_HTML = "index.html";
     private static final long INVALID_SIZE = -1;
-    public static boolean isNetworkAvailable;
+	public static long reqs=0,resolved=0,failed=0;
+    public static boolean isNetworkAvailable=false,shouldUpdate=false;
     public final SQLiteDBM dbm;
     public final String rootPath;
     private final ExecutorService executorService;
@@ -48,6 +49,7 @@ public class MyUtils {
         this.rootPath = rootPath;
         this.context = context;
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
+        //this.executorService = Executors.newThreadPool();
         this.client = new OkHttpClient();
         this.dbm = new SQLiteDBM(context, rootPath + "/revisit.db");
         this.myLogManager=new MyLogManager(context,rootPath+"/log.txt");
@@ -55,16 +57,20 @@ public class MyUtils {
         this.resp=new MyLogManager(context,rootPath+"/saved.base64");
     }
 
-    public void log(String msg){
-        myLogManager.log(msg);
+    public void log(String tag,String msg,Exception e){
+		executorService.execute(()->myLogManager.log(tag+"\t"+msg+"\t"+e.toString()+"\n"));
+    }
+	
+    public void log(String tag,String msg){
+		executorService.execute(()->myLogManager.log(tag+"\t"+msg+"\n"));
     }
 
     public void saveReq(String m){
-        req.log(m);
+        executorService.execute(()->req.log(m+"\n"));
     }
 
     public void saveResp(String m){
-        resp.log(Base64.encode(m.getBytes(),0));
+        executorService.execute(()->resp.log(Base64.encodeToString(m.getBytes(),1)+"\n----\n"));
     }
 
     /**
@@ -77,10 +83,17 @@ public class MyUtils {
         String lastPathSegment = uri.getLastPathSegment();
         String host = uri.getHost();
         String encodedPath = uri.getEncodedPath();
-
+		
+		String q=uri.getQuery();
+		if(q!=null){
+			//uriStr = uri.toString().split("\\?")[0]+Base64.encodeToString(q.getBytes("UTF-8"),Base64.NO_WRAP);
+		}else{
+			//uriStr = uri.toString();
+		}
+		
         // Validate inputs
         if (TextUtils.isEmpty(host) || TextUtils.isEmpty(encodedPath)) {
-            Log.e(TAG, "Invalid URI: Host or path is empty.");
+            log(TAG, "Invalid URI: Host or path is empty.");
             return null; // Or throw an exception if appropriate
         }
 
@@ -93,7 +106,7 @@ public class MyUtils {
         if (lastPathSegment.contains(".")) {
             return localPath;
         } else {
-            return uri.toString().endsWith("/") ? localPath + INDEX_HTML : localPath + File.separator + INDEX_HTML;
+            return localPath.endsWith("/") ? localPath + INDEX_HTML : localPath + File.separator + INDEX_HTML;
         }
     }
 
@@ -138,10 +151,10 @@ public class MyUtils {
                     return body.contentLength();
                 }
             } else {
-                Log.e(TAG, "Error getting size from URL: " + uri + ". Response code: " + response.code());
+                log(TAG, "Error getting size from URL: " + uri + ". Response code: " + response.code());
             }
         } catch (IOException e) {
-            Log.e(TAG, "Error getting size from URL: " + uri, e);
+            log(TAG, "Error getting size from URL: " + uri, e);
         }
         return INVALID_SIZE;
     }
@@ -153,7 +166,7 @@ public class MyUtils {
      * @param listener The listener to receive download events.
      */
     public void download(@NonNull final Uri uri, @NonNull final DownloadListener listener) {
-        executorService.submit(() -> {
+        executorService.execute(() -> {
             String localFilePath = buildLocalPath(uri);
             if (localFilePath == null) {
                 listener.onFailure(new IOException("Failed to build local path for URI: " + uri));
@@ -167,7 +180,7 @@ public class MyUtils {
                     listener.onFailure(new IOException("Failed to create directory: " + parentFile.getAbsolutePath()));
                     return;
                 }
-                Log.d(TAG, "Created directory: " + parentFile.getAbsolutePath());
+                log(TAG, "Created directory: " + parentFile.getAbsolutePath());
             }
 
             Request request = new Request.Builder()
@@ -177,7 +190,7 @@ public class MyUtils {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    Log.e(TAG, "Download failed for URI: " + uri, e);
+                    log(TAG, "Download failed for URI: " + uri, e);
                     listener.onFailure(e);
                 }
 
@@ -196,14 +209,14 @@ public class MyUtils {
                             while ((bytesRead = in.read(buffer)) != -1) {
                                 out.write(buffer, 0, bytesRead);
                             }
-                            Log.d(TAG, "Downloaded: " + uri + " to " + localFilePath);
+                            log(TAG, "Downloaded: " + uri + " to " + localFilePath);
                             listener.onSuccess(localFile, response.headers());
                         } catch (IOException e) {
-                            Log.e(TAG, "Error writing to file: " + localFilePath, e);
+                            log(TAG, "Error writing to file: " + localFilePath, e);
                             listener.onFailure(e);
                         }
                     } else {
-                        Log.e(TAG, "Download failed. Response code: " + response.code() + " for URI: " + uri);
+                        log(TAG, "Download failed. Response code: " + response.code() + " for URI: " + uri);
                         listener.onFailure(new IOException("Download failed. Response code: " + response.code()));
                     }
                 }

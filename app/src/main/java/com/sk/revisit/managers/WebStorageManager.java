@@ -5,6 +5,7 @@ import android.util.Log;
 import android.webkit.URLUtil;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,65 +41,54 @@ public class WebStorageManager {
      */
     @Nullable
     public WebResourceResponse getResponse(WebResourceRequest request) {
-
+		utils.reqs++;
         if (!GET_METHOD.equals(request.getMethod())) {
-            Log.d(TAG, "Request method is not GET, ignoring: " + request.getMethod());
+            utils.log(TAG," Request method is not GET, ignoring: " + request.getMethod());
             return null;
         }
+		
 
         Uri uri = request.getUrl();
-        String uriStr = uri.toString();
+		String uriStr= uri.toString();
 
         if (!URLUtil.isNetworkUrl(uriStr)) {
-            Log.d(TAG, "Not a network URL, ignoring: " + uriStr);
+            utils.log(TAG," Not a network URL, ignoring: " + uriStr);
             return null;
         }
 
         String localPath = utils.buildLocalPath(uri);
         File localFile = new File(localPath);
+		
+		MyUtils.DownloadListener listener =  new MyUtils.DownloadListener(){
+			@Override
+			public void onSuccess(File file, Headers headers) {
+				utils.saveResp(uriStr+"|"+localPath+"|"+file.length()+"|"+headers.toString());
+			   // dbm.insertIntoUrlsIfNotExists(uri, localPath, file.length(), headers);
+			}
 
+			@Override
+			public void onFailure(Exception e) {
+				utils.saveReq(uri.getHost()+","+uriStr);
+				//dbm.insertIntoQueIfNotExists(uri);
+			}
+        };
+					
         if (localFile.exists()) {
-            if (MyUtils.isNetworkAvailable) {
+            if (MyUtils.isNetworkAvailable&&MyUtils.shouldUpdate) {
                 if (shouldUpdateLocalFile(uri, localPath)) {
-                    Log.d(TAG, "Updating local file: " + localPath);
-                    utils.download(uri, new MyUtils.DownloadListener() {
-
-                        @Override
-                        public void onSuccess(File file, Headers headers) {
-                            utils.saveResp(uriStr+"|"+localPath+"|"+file.length()+"|"+headers.toString());
-                           // dbm.insertIntoUrlsIfNotExists(uri, localPath, file.length(), headers);
-                        }
-
-                        @Override
-                        public void onFailure(Exception e) {
-                            utils.saveReq(uriStr);
-                            //dbm.insertIntoQueIfNotExists(uri);
-                        }
-                    });
+                    utils.log(TAG, "Updating local file: " + localPath);
+                    utils.download(uri,listener);
                 }
             }
-            Log.d(TAG, "Loading from local file: " + localPath);
+            utils.log(TAG, "Loading from local file: " + localPath);
             return loadFromLocal(localFile);
         } else {
             if (MyUtils.isNetworkAvailable) {
-                Log.d(TAG, "Local file does not exist, downloading: " + localPath);
-                utils.download(uri, new MyUtils.DownloadListener() {
-
-                    @Override
-                    public void onSuccess(File file, Headers headers) {
-                        utils.saveResp(uriStr+"|"+localPath+"|"+file.length()+"|"+headers.toString());
-                        //dbm.insertIntoUrlsIfNotExists(uri, localPath, file.length(), headers);
-                    }
-
-                    @Override
-                    public void onFailure(Exception e) {
-                        utils.saveReq(uriStr);
-                        //dbm.insertIntoQueIfNotExists(uri);
-                    }
-                });
+                utils.log(TAG, "Local file does not exist, downloading: " + localPath);
+                utils.download(uri,listener);
                 return loadFromLocal(localFile);
             }
-            utils.saveReq(uriStr);
+            utils.saveReq(uri.getHost()+","+uriStr);
             //dbm.insertIntoQueIfNotExists(uri);
             return new WebResourceResponse("text/html", UTF_8, new ByteArrayInputStream("no offline file  or err refresh".getBytes()));
         }
@@ -126,7 +116,7 @@ public class WebStorageManager {
     @Nullable
     private WebResourceResponse loadFromLocal(@NonNull File localFile) {
         if (!localFile.exists() || !localFile.isFile()) {
-            Log.e(TAG, "Local file does not exist or is not a file: " + localFile.getAbsolutePath());
+            utils.log(TAG, "Local file does not exist or is not a file: " + localFile.getAbsolutePath());
             return null;
         }
         String mimeType = utils.getMimeType(localFile.getPath());
@@ -134,7 +124,7 @@ public class WebStorageManager {
             InputStream fis = new FileInputStream(localFile);
             return new WebResourceResponse(mimeType, UTF_8, fis);
         } catch (FileNotFoundException e) {
-            Log.e(TAG, "Error loading from local file: " + localFile.getAbsolutePath(), e);
+            utils.log(TAG, "Error loading from local file: " + localFile.getAbsolutePath(), e);
             return null;
         }
     }

@@ -21,7 +21,11 @@
         android:id="@+id/rootPathTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
-    <Te
+	
+	<Button
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/pickPath"
+		android:text="@string/pick" />
 
 </LinearLayout>

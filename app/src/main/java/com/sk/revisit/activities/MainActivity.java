@@ -16,6 +16,8 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Toast;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout mainDrawerLayout;
     private JSAutoCompleteTextView jsInputTextView;
     private ImageButton executeJsButton;
+	private Switch su;
+	TextView inf;
 
     // Managers and Utilities
     private JSConsoleLogger jsConsoleLogger;
@@ -67,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         initializeUI();
 
         // Initialize Managers and Utilities
-        myUtils = new MyUtils(this, getObbDir().getAbsolutePath());
+        myUtils = new MyUtils(this, settingsManager.getRootStoragePath());
         jsConsoleLogger = new JSConsoleLogger(this, jsConsoleLayout, jsConsoleScrollView);
         jsWebViewManager = new JSWebViewManager(this, mainWebView, jsConsoleLogger);
 
@@ -79,6 +83,11 @@ public class MainActivity extends AppCompatActivity {
         initUrlEditText(urlEditText, mainWebView);
 
         jsInputTextView.setWebView(mainWebView);
+		
+		su.setOnCheckedChangeListener((v,c)->{
+			MyUtils.shouldUpdate=c;
+		});
+		
     }
 
     private void initializeUI() {
@@ -86,13 +95,19 @@ public class MainActivity extends AppCompatActivity {
         mainNavigationView = binding.myNav;
         View headerView = mainNavigationView.getHeaderView(0);
         urlEditText = headerView.findViewById(R.id.urlEditText);
+		su = headerView.findViewById(R.id.su);
         mainWebView = binding.myWebView;
         jsInputTextView = binding.jsInput;
         jsConsoleLayout = binding.consoleLayout;
         jsConsoleScrollView = binding.consoleScrollView;
         executeJsButton = binding.executeJsBtn;
-
-        bg=binding.myNav.getHeaderView(0).findViewById(R.id.bg);
+		
+        bg=headerView.findViewById(R.id.bg);
+        inf=headerView.findViewById(R.id.inf);
+		
+		inf.setOnClickListener((v)->{
+			inf.setText(String.valueOf(myUtils.reqs));
+		});
     }
 
     private void initNetworkChangeListener() {
@@ -153,6 +168,8 @@ public class MainActivity extends AppCompatActivity {
                 startMyActivity(WebpagesActivity.class);
             } else if (id == R.id.nav_log) {
                 startMyActivity(LogActivity.class);
+            } else if (id == R.id.refresh) {
+                mainWebView.reload();
             }
             // Return true to indicate that the item selection is handled
             return true;
@@ -208,7 +225,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         myUtils.shutdown();
-
     }
 
     private void startMyActivity(Class<?> activityClass) {

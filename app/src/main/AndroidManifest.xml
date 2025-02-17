@@ -36,6 +36,9 @@
         <activity
             android:name=".activities.LogActivity"
             android:exported="false" />
+		<activity
+            android:name=".activities.FirstActivity"
+            android:exported="false" />
         <activity
             android:name=".activities.AboutActivity"
             android:exported="true" />

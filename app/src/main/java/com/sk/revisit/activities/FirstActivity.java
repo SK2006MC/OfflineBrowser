@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Toast;
+import android.os.Environment;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
+
+import java.io.File;
 
 import com.sk.revisit.R;
 import com.sk.revisit.databinding.ActivityFirstBinding;
@@ -73,11 +76,12 @@ public class FirstActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == REQUEST_CODE_PICK_FOLDER && resultCode == RESULT_OK){
             if(data !=null && data.getData() !=null){
-                Uri treeUri = data.getData();
-                String rootPath = treeUri.toString();
-                DocumentFile pickedDir = DocumentFile.fromTreeUri(this,treeUri);
-                if(pickedDir != null && pickedDir.isDirectory() && pickedDir.canWrite()){
-                    settingsManager.setRootStoragePath(rootPath);
+                Uri uri = data.getData();
+                String path = uri.getPath();
+				String root = path.split(":")[1];
+				String folderPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + root;
+				if(folderPath != null){
+                    settingsManager.setRootStoragePath(folderPath);
                     binding.rootPathTextView.setText(settingsManager.getRootStoragePath());
                 }else {
                     Toast.makeText(this,"Cannot choose this directory",Toast.LENGTH_LONG).show();
