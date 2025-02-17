@@ -1,11 +1,9 @@
 package com.sk.revisit.managers;
 
 import android.net.Uri;
-import android.util.Log;
 import android.webkit.URLUtil;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
-import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,7 +39,7 @@ public class WebStorageManager {
      */
     @Nullable
     public WebResourceResponse getResponse(WebResourceRequest request) {
-		utils.reqs++;
+		MyUtils.requests++;
         if (!GET_METHOD.equals(request.getMethod())) {
             utils.log(TAG," Request method is not GET, ignoring: " + request.getMethod());
             return null;
@@ -49,6 +47,9 @@ public class WebStorageManager {
 		
 
         Uri uri = request.getUrl();
+        if(uri.getQuery()!=null){
+            return null;
+        }
 		String uriStr= uri.toString();
 
         if (!URLUtil.isNetworkUrl(uriStr)) {
@@ -68,6 +69,7 @@ public class WebStorageManager {
 
 			@Override
 			public void onFailure(Exception e) {
+                MyUtils.requests++;
 				utils.saveReq(uri.getHost()+","+uriStr);
 				//dbm.insertIntoQueIfNotExists(uri);
 			}
@@ -80,7 +82,7 @@ public class WebStorageManager {
                     utils.download(uri,listener);
                 }
             }
-            utils.log(TAG, "Loading from local file: " + localPath);
+            //utils.log(TAG, "Loading from local file: " + localPath);
             return loadFromLocal(localFile);
         } else {
             if (MyUtils.isNetworkAvailable) {
@@ -102,6 +104,7 @@ public class WebStorageManager {
      * @return True if the local file should be updated, false otherwise.
      */
     private boolean shouldUpdateLocalFile(Uri uri, String localPath) {
+        utils.log(TAG,"Checking for update...");
         long remoteSize = utils.getSizeFromUrl(uri);
         long localSize = utils.getSizeFromLocal(localPath);
         return remoteSize != -1 && localSize != -1 && remoteSize != localSize;
@@ -122,6 +125,7 @@ public class WebStorageManager {
         String mimeType = utils.getMimeType(localFile.getPath());
         try {
             InputStream fis = new FileInputStream(localFile);
+            MyUtils.resolved++;
             return new WebResourceResponse(mimeType, UTF_8, fis);
         } catch (FileNotFoundException e) {
             utils.log(TAG, "Error loading from local file: " + localFile.getAbsolutePath(), e);

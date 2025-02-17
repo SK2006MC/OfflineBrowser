@@ -60,4 +60,5 @@
     </string>
     <string name="none">None</string>
     <string name="title_rootpath">Root Path:</string>
+    <string name="req">requests %d\nresolved %d\nfailed %d</string>
 </resources>
