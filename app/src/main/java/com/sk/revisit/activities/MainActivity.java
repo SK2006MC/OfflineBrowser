@@ -32,6 +32,7 @@ import com.sk.revisit.jsact.JSWebViewManager;
 import com.sk.revisit.jsv2.JSAutoCompleteTextView;
 import com.sk.revisit.managers.MySettingsManager;
 import com.sk.revisit.webview.MyWebViewClient;
+import com.sk.revisit.managers.WebStorageManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -186,7 +187,8 @@ public class MainActivity extends AppCompatActivity {
 
 	@SuppressLint("SetJavaScriptEnabled")
 	private void initWebView(@NonNull WebView webView) {
-		webView.setWebViewClient(new MyWebViewClient(myUtils));
+	
+		webView.setWebViewClient(new MyWebViewClient(new WebStorageManager(myUtils)));
 		WebSettings webSettings = webView.getSettings();
 		webSettings.setAllowContentAccess(true);
 		webSettings.setAllowFileAccess(true);

@@ -156,7 +156,7 @@ public class MyUtils {
      * Downloads a resource from a URI to a local file using buffered streams.
      */
     public void download(@NonNull final Uri uri, @NonNull final DownloadListener listener) {
-        downloadExecutor.execute(() -> {
+        executorService.execute(() -> {
             String localFilePath = buildLocalPath(uri);
             if (localFilePath == null) {
                 listener.onFailure(new IOException("Failed to build local path for URI: " + uri));
