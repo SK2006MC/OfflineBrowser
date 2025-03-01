@@ -11,12 +11,18 @@ import androidx.annotation.NonNull;
 import com.sk.revisit.managers.MyLogManager;
 import com.sk.revisit.managers.SQLiteDBM;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -27,222 +33,231 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class MyUtils {
-	private static final String TAG = "MyUtils";
-	private static final int MAX_THREADS = 8;
-	private static final String INDEX_HTML = "index.html";
-	private static final long INVALID_SIZE = -1;
-	public static long requests =0,resolved=0,failed=0;
-	public static boolean isNetworkAvailable=false,shouldUpdate=false;
-	public final SQLiteDBM dbm;
-	public final String rootPath;
-	private final ExecutorService executorService;
-	private final OkHttpClient client;
-	public final Context context;
+    private static final String TAG = "MyUtils";
+    private static final int MAX_THREADS = 8;
+    private static final String INDEX_HTML = "index.html";
+    private static final long INVALID_SIZE = -1;
+    
+    // Use atomic counters for thread safety
+    public static AtomicLong requests = new AtomicLong(0);
+    public static AtomicLong resolved = new AtomicLong(0);
+    public static AtomicLong failed = new AtomicLong(0);
+    
+    public static boolean isNetworkAvailable = false, shouldUpdate = false;
 
-	MyLogManager myLogManager,req,resp;
+    public final SQLiteDBM dbm;
+    public final String rootPath;
+    private final ExecutorService executorService;
+    private final ExecutorService loggingExecutor;
+    private final OkHttpClient client;
+    public final Context context;
+    private final LoggerHelper logger;
+    
+    // Cache for remote file sizes (to avoid repeating HEAD requests)
+    private final ConcurrentHashMap<String, CachedSize> remoteSizeCache = new ConcurrentHashMap<>();
+    private static final long REMOTE_SIZE_CACHE_EXPIRATION_MILLIS = 5 * 60 * 1000; // 5 minutes
 
-	public MyUtils(Context context, String rootPath) {
-		this.rootPath = rootPath;
-		this.context = context;
-		this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
-		//this.executorService = Executors.newThreadPool();
-		this.client = new OkHttpClient();
-		this.dbm = new SQLiteDBM(context, rootPath + "/revisit.db");
-		this.myLogManager=new MyLogManager(context,rootPath+"/log.txt");
-		this.req=new MyLogManager(context,rootPath+"/req.txt");
-		this.resp=new MyLogManager(context,rootPath+"/saved.base64");
-	}
+    public MyUtils(Context context, String rootPath) {
+        this.rootPath = rootPath;
+        this.context = context;
+        this.executorService = Executors.newFixedThreadPool(MAX_THREADS, new CustomThreadFactory());
+        this.loggingExecutor = Executors.newSingleThreadExecutor(new LoggingThreadFactory());
+        this.client = new OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build();
+        this.dbm = new SQLiteDBM(context, rootPath + "/revisit.db");
+        this.logger = new LoggerHelper(context, rootPath, loggingExecutor);
+    }
 
-	public void log(String tag,String msg,Exception e){
-		executorService.execute(()->myLogManager.log(tag+"\t"+msg+"\t"+e.toString()+"\n"));
-	}
+    // Logging methods use the separate logging executor.
+    public void log(String tag, String msg, Exception e) {
+        loggingExecutor.execute(() -> logger.log(tag + "\t" + msg + "\t" + e.toString()));
+    }
 
-	public void log(String tag,String msg){
-		executorService.execute(()->myLogManager.log(tag+"\t"+msg+"\n"));
-	}
+    public void log(String tag, String msg) {
+        loggingExecutor.execute(() -> logger.log(tag + "\t" + msg));
+    }
 
-	public void saveReq(String m){
-		executorService.execute(()->req.log(m+"\n"));
-	}
+    public void saveReq(String m) {
+        loggingExecutor.execute(() -> logger.saveReq(m));
+    }
 
-	public void saveResp(String m){
-		executorService.execute(()->resp.log(Base64.encodeToString(m.getBytes(),1)+"\n----\n"));
-	}
+    public void saveResp(String m) {
+        loggingExecutor.execute(() -> logger.saveResp(m));
+    }
 
-	/**
-	 * Builds a local file path based on the given URI.
-	 *
-	 * @param uri The URI to build the local path from.
-	 * @return The local file path as a String.
-	 */
-	public String buildLocalPath(@NonNull Uri uri) {
-		String lastPathSegment = uri.getLastPathSegment();
-		String host = uri.getHost();
-		String encodedPath = uri.getEncodedPath();
+    /**
+     * Builds a local file path based on the given URI.
+     */
+    public String buildLocalPath(@NonNull Uri uri) {
+        String lastPathSegment = uri.getLastPathSegment();
+        String host = uri.getHost();
+        String encodedPath = uri.getEncodedPath();
 
-		String q=uri.getQuery();
-		if(q!=null){
-			//uriStr = uri.toString().split("\\?")[0]+Base64.encodeToString(q.getBytes("UTF-8"),Base64.NO_WRAP);
-		}else{
-			//uriStr = uri.toString();
-		}
+        if (TextUtils.isEmpty(host) || TextUtils.isEmpty(encodedPath)) {
+            log(TAG, "Invalid URI: Host or path is empty.");
+            return null;
+        }
 
-		// Validate inputs
-		if (TextUtils.isEmpty(host) || TextUtils.isEmpty(encodedPath)) {
-			log(TAG, "Invalid URI: Host or path is empty.");
-			return null; // Or throw an exception if appropriate
-		}
+        String localPath = rootPath + File.separator + host + encodedPath;
 
-		String localPath = rootPath + File.separator + host + encodedPath;
+        if (lastPathSegment == null || !lastPathSegment.contains(".")) {
+            return localPath.endsWith("/") ? localPath + INDEX_HTML : localPath + File.separator + INDEX_HTML;
+        }
+        return localPath;
+    }
 
-		if (lastPathSegment == null) {
-			return localPath + File.separator + INDEX_HTML;
-		}
+    @NonNull
+    public String getMimeType(String url) {
+        String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+        return extension != null ? MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) : "application/octet-stream";
+    }
 
-		if (lastPathSegment.contains(".")) {
-			return localPath;
-		} else {
-			return localPath.endsWith("/") ? localPath + INDEX_HTML : localPath + File.separator + INDEX_HTML;
-		}
-	}
+    /**
+     * Gets the size of a local file.
+     */
+    public long getSizeFromLocal(@NonNull String filePath) {
+        File file = new File(filePath);
+        return file.exists() ? file.length() : INVALID_SIZE;
+    }
 
+    /**
+     * Gets the remote file size via a HEAD request. Uses a cache to avoid repeated network calls.
+     */
+    public long getSizeFromUrl(@NonNull Uri uri) {
+        String key = uri.toString();
+        CachedSize cached = remoteSizeCache.get(key);
+        long now = System.currentTimeMillis();
+        if (cached != null && now - cached.timestamp < REMOTE_SIZE_CACHE_EXPIRATION_MILLIS) {
+            return cached.size;
+        }
+        
+        Request request = new Request.Builder()
+                .url(key)
+                .head()
+                .build();
 
-	@NonNull
-	public String getMimeType(String url) {
-		String type = null;
-		String extension = MimeTypeMap.getFileExtensionFromUrl(url);
-		if (extension != null) {
-			type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-		}
-		return type != null ? type : "application/octet-stream";
-	}
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                long size = response.body().contentLength();
+                remoteSizeCache.put(key, new CachedSize(size, now));
+                return size;
+            } else {
+                log(TAG, "Error getting size from URL: " + uri + ". Response code: " + response.code());
+            }
+        } catch (IOException e) {
+            log(TAG, "Error getting size from URL: " + uri, e);
+        }
+        return INVALID_SIZE;
+    }
 
-	/**
-	 * Gets the size of a local file.
-	 *
-	 * @param filePath The path to the local file.
-	 * @return The size of the file in bytes, or -1 if the file does not exist.
-	 */
-	public long getSizeFromLocal(@NonNull String filePath) {
-		File file = new File(filePath);
-		return file.exists() ? file.length() : INVALID_SIZE;
-	}
+    /**
+     * Downloads a resource from a URI to a local file using buffered streams.
+     */
+    public void download(@NonNull final Uri uri, @NonNull final DownloadListener listener) {
+        executorService.execute(() -> {
+            String localFilePath = buildLocalPath(uri);
+            if (localFilePath == null) {
+                listener.onFailure(new IOException("Failed to build local path for URI: " + uri));
+                return;
+            }
+            File localFile = prepareFile(localFilePath);
+            if (localFile == null) {
+                listener.onFailure(new IOException("Failed to prepare file: " + localFilePath));
+                return;
+            }
 
-	/**
-	 * Gets the size of a resource from a URL using OkHttp.
-	 *
-	 * @param uri The URI of the resource.
-	 * @return The size of the resource in bytes, or -1 if an error occurs.
-	 */
-	public long getSizeFromUrl(@NonNull Uri uri) {
-		Request request = new Request.Builder()
-				.url(uri.toString())
-				.head() // Use HEAD request to get only headers
-				.build();
+            Request request = new Request.Builder()
+                    .url(uri.toString())
+                    .build();
 
-		try (Response response = client.newCall(request).execute()) {
-			if (response.isSuccessful()) {
-				ResponseBody body = response.body();
-				if (body != null) {
-					return body.contentLength();
-				}
-			} else {
-				log(TAG, "Error getting size from URL: " + uri + ". Response code: " + response.code());
-			}
-		} catch (IOException e) {
-			log(TAG, "Error getting size from URL: " + uri, e);
-		}
-		return INVALID_SIZE;
-	}
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    log(TAG, "Download failed for URI: " + uri, e);
+                    listener.onFailure(e);
+                }
 
-	/**
-	 * Downloads a resource from a URI to a local file using OkHttp.
-	 *
-	 * @param uri      The URI of the resource to download.
-	 * @param listener The listener to receive download events.
-	 */
-	public void download(@NonNull final Uri uri, @NonNull final DownloadListener listener) {
-		executorService.execute(() -> {
-			String localFilePath = buildLocalPath(uri);
-			if (localFilePath == null) {
-				listener.onFailure(new IOException("Failed to build local path for URI: " + uri));
-				return;
-			}
-			File localFile = new File(localFilePath);
-			File parentFile = localFile.getParentFile();
-			if (parentFile != null && !parentFile.exists()) {
-				boolean mkdirs = parentFile.mkdirs();
-				if (!mkdirs) {
-					listener.onFailure(new IOException("Failed to create directory: " + parentFile.getAbsolutePath()));
-					return;
-				}
-				log(TAG, "Created directory: " + parentFile.getAbsolutePath());
-			}
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                    if (!response.isSuccessful() || response.body() == null) {
+                        log(TAG, "Download failed. Response code: " + response.code() + " for URI: " + uri);
+                        listener.onFailure(new IOException("Download failed. Response code: " + response.code()));
+                        return;
+                    }
+                    try (InputStream in = new BufferedInputStream(response.body().byteStream());
+                         FileOutputStream fos = new FileOutputStream(localFile);
+                         BufferedOutputStream out = new BufferedOutputStream(fos)) {
+                        byte[] buffer = new byte[8192];
+                        int bytesRead;
+                        while ((bytesRead = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, bytesRead);
+                        }
+                        out.flush();
+                        log(TAG, "Downloaded: " + uri + " to " + localFilePath);
+                        listener.onSuccess(localFile, response.headers());
+                    } catch (IOException e) {
+                        log(TAG, "Error writing to file: " + localFilePath, e);
+                        listener.onFailure(e);
+                    }
+                }
+            });
+        });
+    }
 
-			Request request = new Request.Builder()
-					.url(uri.toString())
-					.build();
+    private File prepareFile(String path) {
+        File file = new File(path);
+        File parentFile = file.getParentFile();
+        if (parentFile != null && !parentFile.exists() && !parentFile.mkdirs()) {
+            log(TAG, "Failed to create directory: " + parentFile.getAbsolutePath());
+            return null;
+        }
+        return file;
+    }
 
-			client.newCall(request).enqueue(new Callback() {
-				@Override
-				public void onFailure(@NonNull Call call, @NonNull IOException e) {
-					log(TAG, "Download failed for URI: " + uri, e);
-					listener.onFailure(e);
-				}
+    /**
+     * Shuts down the executors.
+     */
+    public void shutdown() {
+        executorService.shutdown();
+        loggingExecutor.shutdown();
+    }
 
-				@Override
-				public void onResponse(@NonNull Call call, @NonNull Response response) {
-					if (response.isSuccessful()) {
-						ResponseBody body = response.body();
-						if (body == null) {
-							listener.onFailure(new IOException("Empty response body for URI: " + uri));
-							return;
-						}
-						try (InputStream in = body.byteStream();
-							 FileOutputStream out = new FileOutputStream(localFile)) {
-							byte[] buffer = new byte[8192];
-							int bytesRead;
-							while ((bytesRead = in.read(buffer)) != -1) {
-								out.write(buffer, 0, bytesRead);
-							}
-							log(TAG, "Downloaded: " + uri + " to " + localFilePath);
-							listener.onSuccess(localFile, response.headers());
-						} catch (IOException e) {
-							log(TAG, "Error writing to file: " + localFilePath, e);
-							listener.onFailure(e);
-						}
-					} else {
-						log(TAG, "Download failed. Response code: " + response.code() + " for URI: " + uri);
-						listener.onFailure(new IOException("Download failed. Response code: " + response.code()));
-					}
-				}
-			});
-		});
-	}
+    /**
+     * Listener interface for download events.
+     */
+    public interface DownloadListener {
+        void onSuccess(File file, Headers headers);
+        void onFailure(Exception e);
+    }
 
-	/**
-	 * Shuts down the executor service.
-	 */
-	public void shutdown() {
-		executorService.shutdown();
-	}
-
-	/**
-	 * Interface for listening to download events.
-	 */
-	public interface DownloadListener {
-		/**
-		 * Called when the download is successful.
-		 *
-		 * @param file The downloaded file.
-		 */
-		void onSuccess(File file, Headers headers);
-
-		/**
-		 * Called when the download fails.
-		 *
-		 * @param e The exception that caused the failure.
-		 */
-		void onFailure(Exception e);
-	}
+    // Thread factory for download tasks
+    private static class CustomThreadFactory implements ThreadFactory {
+        private int count = 0;
+        @Override
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "MyUtils-Thread-" + count++);
+        }
+    }
+    
+    // Thread factory for logging tasks (lower priority)
+    private static class LoggingThreadFactory implements ThreadFactory {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "MyUtils-Logging-Thread");
+            t.setPriority(Thread.MIN_PRIORITY);
+            return t;
+        }
+    }
+    
+    // Simple class to cache remote file sizes
+    private static class CachedSize {
+        final long size;
+        final long timestamp;
+        CachedSize(long size, long timestamp) {
+            this.size = size;
+            this.timestamp = timestamp;
+        }
+    }
 }

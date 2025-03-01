@@ -51,11 +51,9 @@ Click [here](https://github.com/SK2006MC/OfflineBrowser/releases) to download th
 
 ## Usage
 
-1. Open the application.
-   1.1. If it's the first time, select the location (folder) where you want to store the webpages.
-   1.2. Then click Start.
+1. Open the application.If it's the first time, select the location (folder) where you want to store the webpages.Then click Start.
 2. Swipe from the left side of the screen to the right side to access the URL bar.
-3. Enter the URL and click the Load URL button.
+3. Enter the URL.Touch the webview
 4. The webpage will be automatically stored in the location you specified.
 
 ## Contributing
