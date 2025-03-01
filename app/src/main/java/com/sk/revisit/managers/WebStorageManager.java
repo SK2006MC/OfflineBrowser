@@ -44,33 +44,21 @@ public class WebStorageManager {
         }
 
         String localPath = utils.buildLocalPath(uri);
-        if (localPath == null) {
-            return null;
-        }
-        File localFile = new File(localPath);
-        MyUtils.DownloadListener listener = createDownloadListener(uri, uriStr, localPath);
+        if (localPath == null) return null;
 
+        File localFile = new File(localPath);
         if (localFile.exists()) {
-            if (MyUtils.isNetworkAvailable && MyUtils.shouldUpdate && shouldUpdateLocalFile(uri, localPath)) {
-                utils.log(TAG, "Updating local file: " + localPath);
-                utils.download(uri, listener);
+            if (MyUtils.shouldUpdate) {
+                utils.download(uri, createDownloadListener(uri, uriStr, localPath));
             }
             return loadFromLocal(localFile);
         } else {
             if (MyUtils.isNetworkAvailable) {
-                utils.log(TAG, "Downloading missing file: " + localPath);
-                utils.download(uri, listener);
+                utils.download(uri, createDownloadListener(uri, uriStr, localPath));
+                return loadFromLocal(localFile);
             }
-            utils.saveReq(uri.getHost() + "," + uriStr);
-            return new WebResourceResponse("text/html", UTF_8,
-                    new ByteArrayInputStream("No offline file available, please refresh.".getBytes()));
+            return new WebResourceResponse("text/html", UTF_8, new ByteArrayInputStream("No offline file available.".getBytes()));
         }
-    }
-
-    private boolean shouldUpdateLocalFile(Uri uri, String localPath) {
-        long remoteSize = utils.getSizeFromUrl(uri);
-        long localSize = utils.getSizeFromLocal(localPath);
-        return remoteSize > 0 && localSize > 0 && remoteSize != localSize;
     }
 
     private MyUtils.DownloadListener createDownloadListener(Uri uri, String uriStr, String localPath) {
@@ -90,17 +78,10 @@ public class WebStorageManager {
 
     @Nullable
     private WebResourceResponse loadFromLocal(@NonNull File localFile) {
-        if (!localFile.exists() || !localFile.isFile()) {
-            utils.log(TAG, "Local file does not exist or is not a file: " + localFile.getAbsolutePath());
-            return null;
-        }
-        String mimeType = utils.getMimeType(localFile.getPath());
         try {
-            InputStream fis = new FileInputStream(localFile);
-            MyUtils.resolved.incrementAndGet();
-            return new WebResourceResponse(mimeType, UTF_8, fis);
+            return new WebResourceResponse(utils.getMimeType(localFile.getPath()), UTF_8, new FileInputStream(localFile));
         } catch (FileNotFoundException e) {
-            utils.log(TAG, "Error loading from local file: " + localFile.getAbsolutePath(), e);
+            utils.log(TAG, "File not found: " + localFile.getAbsolutePath(), e);
             return null;
         }
     }

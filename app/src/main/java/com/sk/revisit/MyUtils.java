@@ -156,21 +156,21 @@ public class MyUtils {
      * Downloads a resource from a URI to a local file using buffered streams.
      */
     public void download(@NonNull final Uri uri, @NonNull final DownloadListener listener) {
-        executorService.execute(() -> {
+        downloadExecutor.execute(() -> {
             String localFilePath = buildLocalPath(uri);
             if (localFilePath == null) {
                 listener.onFailure(new IOException("Failed to build local path for URI: " + uri));
                 return;
             }
-            File localFile = prepareFile(localFilePath);
-            if (localFile == null) {
-                listener.onFailure(new IOException("Failed to prepare file: " + localFilePath));
+
+            // Check if file already exists and is up to date
+            if (!shouldUpdate && new File(localFilePath).exists()) {
+                log(TAG, "File already exists, skipping download: " + localFilePath);
+                listener.onSuccess(new File(localFilePath), null);
                 return;
             }
 
-            Request request = new Request.Builder()
-                    .url(uri.toString())
-                    .build();
+            Request request = new Request.Builder().url(uri.toString()).build();
 
             client.newCall(request).enqueue(new Callback() {
                 @Override
@@ -186,9 +186,9 @@ public class MyUtils {
                         listener.onFailure(new IOException("Download failed. Response code: " + response.code()));
                         return;
                     }
+
                     try (InputStream in = new BufferedInputStream(response.body().byteStream());
-                         FileOutputStream fos = new FileOutputStream(localFile);
-                         BufferedOutputStream out = new BufferedOutputStream(fos)) {
+                         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(localFilePath))) {
                         byte[] buffer = new byte[8192];
                         int bytesRead;
                         while ((bytesRead = in.read(buffer)) != -1) {
@@ -196,7 +196,13 @@ public class MyUtils {
                         }
                         out.flush();
                         log(TAG, "Downloaded: " + uri + " to " + localFilePath);
-                        listener.onSuccess(localFile, response.headers());
+                        listener.onSuccess(new File(localFilePath), response.headers());
+
+                        // Store metadata asynchronously
+                        loggingExecutor.execute(() ->
+                            dbm.insertIntoUrlsIfNotExists(uri, localFilePath, new File(localFilePath).length(), response.headers())
+                        );
+
                     } catch (IOException e) {
                         log(TAG, "Error writing to file: " + localFilePath, e);
                         listener.onFailure(e);
@@ -261,3 +267,139 @@ public class MyUtils {
         }
     }
 }
+
+/*
+package com.sk.revisit;
+
+import android.content.Context;
+import android.net.Uri;
+import android.util.Base64;
+import android.webkit.MimeTypeMap;
+
+import androidx.annotation.NonNull;
+
+import com.sk.revisit.managers.MyLogManager;
+import com.sk.revisit.managers.SQLiteDBM;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Headers;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+
+public class MyUtils {
+    private static final String TAG = "MyUtils";
+    private static final int MAX_THREADS = 8;
+    private static final long INVALID_SIZE = -1;
+
+    public static AtomicLong requests = new AtomicLong(0);
+    public static AtomicLong resolved = new AtomicLong(0);
+    public static AtomicLong failed = new AtomicLong(0);
+
+    public static boolean isNetworkAvailable = false, shouldUpdate = false;
+
+    public final SQLiteDBM dbm;
+    public final String rootPath;
+    private final ExecutorService downloadExecutor;
+    private final ExecutorService backgroundExecutor;
+    private final OkHttpClient client;
+    public final Context context;
+    private final LoggerHelper logger;
+
+    public MyUtils(Context context, String rootPath) {
+        this.rootPath = rootPath;
+        this.context = context;
+        this.downloadExecutor = Executors.newFixedThreadPool(MAX_THREADS);
+        this.backgroundExecutor = Executors.newSingleThreadExecutor();
+        this.client = new OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build();
+        this.dbm = new SQLiteDBM(context, rootPath + "/revisit.db");
+        this.logger = new LoggerHelper(context, rootPath, backgroundExecutor);
+    }
+
+    /**
+     * Downloads a resource and writes it efficiently.
+     *//*
+    public void download(@NonNull final Uri uri, @NonNull final DownloadListener listener) {
+        downloadExecutor.execute(() -> {
+            String localFilePath = buildLocalPath(uri);
+            if (localFilePath == null) {
+                listener.onFailure(new IOException("Failed to build local path for URI: " + uri));
+                return;
+            }
+
+            // Check if file already exists and is up to date
+            if (!shouldUpdate && new File(localFilePath).exists()) {
+                logger.log(TAG, "File already exists, skipping download: " + localFilePath);
+                listener.onSuccess(new File(localFilePath), null);
+                return;
+            }
+
+            Request request = new Request.Builder().url(uri.toString()).build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    logger.log(TAG, "Download failed for URI: " + uri, e);
+                    listener.onFailure(e);
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                    if (!response.isSuccessful() || response.body() == null) {
+                        logger.log(TAG, "Download failed. Response code: " + response.code() + " for URI: " + uri);
+                        listener.onFailure(new IOException("Download failed. Response code: " + response.code()));
+                        return;
+                    }
+
+                    try (InputStream in = new BufferedInputStream(response.body().byteStream());
+                         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(localFilePath))) {
+                        byte[] buffer = new byte[8192];
+                        int bytesRead;
+                        while ((bytesRead = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, bytesRead);
+                        }
+                        out.flush();
+                        logger.log(TAG, "Downloaded: " + uri + " to " + localFilePath);
+                        listener.onSuccess(new File(localFilePath), response.headers());
+
+                        // Store metadata asynchronously
+                        backgroundExecutor.execute(() ->
+                            dbm.insertIntoUrlsIfNotExists(uri, localFilePath, new File(localFilePath).length(), response.headers())
+                        );
+
+                    } catch (IOException e) {
+                        logger.log(TAG, "Error writing to file: " + localFilePath, e);
+                        listener.onFailure(e);
+                    }
+                }
+            });
+        });
+    }
+
+    public void shutdown() {
+        downloadExecutor.shutdown();
+        backgroundExecutor.shutdown();
+    }
+
+    public interface DownloadListener {
+        void onSuccess(File file, Headers headers);
+        void onFailure(Exception e);
+    }
+}
+*/
