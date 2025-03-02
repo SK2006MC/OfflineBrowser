@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JSAutoCompleteTextView extends androidx.appcompat.widget.AppCompatAutoCompleteTextView {
-	private static final String TAG = "JSAutoCompleteTextView";
 	private static final long DEBOUNCE_DELAY = 300;
 	private final Handler handler = new Handler(Looper.getMainLooper());
 	public ArrayAdapter<String> adapter;
