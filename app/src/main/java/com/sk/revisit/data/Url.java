@@ -4,6 +4,7 @@ import android.net.Uri;
 
 public class Url {
 	private final String url;
+	public long size;
 	private boolean isDownloaded;
 	private boolean isSelected;
 	private boolean isUpdateAvailable;
@@ -42,5 +43,13 @@ public class Url {
 
 	public void setUpdateAvailable(boolean updateAvailable) {
 		isUpdateAvailable = updateAvailable;
+	}
+
+	public long getSize() {
+		return size;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
 	}
 }

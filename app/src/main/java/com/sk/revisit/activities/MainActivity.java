@@ -35,6 +35,7 @@ import com.sk.revisit.jsact.JSWebViewManager;
 import com.sk.revisit.jsv2.JSAutoCompleteTextView;
 import com.sk.revisit.managers.MySettingsManager;
 import com.sk.revisit.managers.WebStorageManager;
+import com.sk.revisit.webview.MyWebChromeClient;
 import com.sk.revisit.webview.MyWebViewClient;
 
 public class MainActivity extends AppCompatActivity {
@@ -92,7 +93,15 @@ public class MainActivity extends AppCompatActivity {
 		jsInputTextView.setWebView(mainWebView);
 
 		su.setOnCheckedChangeListener((v, c) -> MyUtils.shouldUpdate = c);
+		initProgressBar(mainWebView);
+	}
 
+	void initProgressBar(WebView webView){
+		MyWebChromeClient chromeClient =(MyWebChromeClient) webView.getWebChromeClient();
+
+		chromeClient.setProgressListener(progress -> {
+			binding.pageLoad.setProgress(progress);
+		});
 	}
 
 	@Override

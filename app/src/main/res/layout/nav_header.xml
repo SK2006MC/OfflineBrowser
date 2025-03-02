@@ -20,7 +20,6 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:imeOptions="actionDone"
             android:singleLine="true"
             android:text="@string/revisit"
             android:textColor="@android:color/white"
@@ -43,6 +42,7 @@
         android:layout_height="wrap_content"
         android:autofillHints="google.com"
         android:hint="@string/enter_a_url"
+        android:imeOptions="actionDone"
         android:inputType="textUri" />
 
     <Switch

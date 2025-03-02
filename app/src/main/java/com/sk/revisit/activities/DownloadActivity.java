@@ -1,6 +1,7 @@
 package com.sk.revisit.activities;
 
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,7 +13,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.sk.revisit.MyUtils;
-import com.sk.revisit.adapter.HostUrlAdapter;
+import com.sk.revisit.adapter.HostAdapter;
+import com.sk.revisit.data.Host;
+import com.sk.revisit.data.Url;
 import com.sk.revisit.databinding.ActivityDownloadBinding;
 import com.sk.revisit.managers.MySettingsManager;
 
@@ -21,24 +24,25 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class DownloadActivity extends AppCompatActivity {
 
 	private static final String TAG = "DownloadActivity";
-	ActivityDownloadBinding binding;
+	private ActivityDownloadBinding binding;
 	private MyUtils myUtils;
-	private final Set<String> urlsToDownload = new HashSet<>();
+	private Map<String,List<String>> hosts; 
 	private MySettingsManager settingsManager;
 	private TextView statusTextView;
 
 	private final AtomicLong totalSize = new AtomicLong(0);
 	private int urlCount = 0;
 	private final Handler mainHandler = new Handler(Looper.getMainLooper());
-	public RecyclerView recyclerView;
-	HostUrlAdapter hostUrlAdapter;
+	public RecyclerView hostRecycler;
+	HostAdapter hostAdapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -48,22 +52,43 @@ public class DownloadActivity extends AppCompatActivity {
 
 		settingsManager = new MySettingsManager(this);
 		myUtils = new MyUtils(this, settingsManager.getRootStoragePath());
-		hostUrlAdapter = new HostUrlAdapter(new ArrayList<>());
 
 		initUI();
-		loadUrls();
+		loadUrlsFromFile();
+		initRecyclerView();
 	}
 
+	void initRecyclerView(){
+		List<Host> hosts2=new ArrayList<>();
+		hostAdapter = new HostAdapter(hosts2);
+		hostRecycler = binding.hosts;
+		
+		Set<String> hostsStr = hosts.keySet();
+		for(String host :hostsStr){
+			Host host2 = new Host(host);
+			hosts2.add(host2);
+
+			List<Url> urls=new ArrayList<>();
+			List<String> urls1 = hosts.get(host);
+
+			assert urls1 != null;
+			for(String url:urls1){
+				urls.add(new Url(url));
+			}
+
+			host2.setUrls(urls);
+		}
+
+		hostRecycler.setAdapter(hostAdapter);
+	}
 	void initUI(){
 		statusTextView = binding.downloadStatus;
-		recyclerView = binding.hosts;
+		hostRecycler = binding.hosts;
 		binding.total.setText("0 B");
 		binding.buttonDownload.setOnClickListener(v -> {
-			downloadUrls();
 		});
 	}
-
-	private void loadUrls() {
+	private void loadUrlsFromFile() {
 		String filePath = settingsManager.getRootStoragePath() + File.separator + "req.txt";
 		File file = new File(filePath);
 		if (!file.exists()) {
@@ -74,12 +99,11 @@ public class DownloadActivity extends AppCompatActivity {
 
 		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 			String line;
-			//a line contains urlhost,url (seperated by ',')
 			while ((line = reader.readLine()) != null) {
-//				String host = line.trim().split(",")[0];
-				String url = line.trim().split(",")[1];
+				String url = line.trim();
+				Uri uri=Uri.parse(url);
 				if (!url.isEmpty()) {
-					urlsToDownload.add(url);
+					add(hosts,uri.getHost(),url);
 					urlCount++;
 				}
 			}
@@ -88,33 +112,8 @@ public class DownloadActivity extends AppCompatActivity {
 			Toast.makeText(this, "Error reading req.txt", Toast.LENGTH_SHORT).show();
 		}
 		mainHandler.post(() -> statusTextView.setText("Urls to download: " + urlCount));
-
 	}
-
-	private void downloadUrls() {
-		if (urlsToDownload.isEmpty()) {
-			Toast.makeText(this, "No URLs to download!", Toast.LENGTH_SHORT).show();
-			return;
-		}
-		binding.buttonDownload.setEnabled(false);
-
-		for (String url : urlsToDownload) {
-			Uri uri = Uri.parse(url);
-			myUtils.download(uri, new MyUtils.DownloadListener() {
-				@Override
-				public void onSuccess(File file, okhttp3.Headers headers) {
-					totalSize.addAndGet(file.length());
-				}
-
-				@Override
-				public void onFailure(Exception e) {
-					myUtils.saveReq(uri.getHost() + "," + url);
-				}
-			});
-		}
-		mainHandler.post(() -> Toast.makeText(this, "Downloading...", Toast.LENGTH_SHORT).show());
-	}
-
+	
 	private String getSize(long size) {
 		final String[] units = new String[]{"B", "KB", "MB", "GB", "TB"};
 		int index = 0;
@@ -130,5 +129,16 @@ public class DownloadActivity extends AppCompatActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		myUtils.shutdown();
+	}
+	
+	public void add(Map<String,List<String>> listMap,String host,String url){
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+			listMap.computeIfAbsent(host,k->new ArrayList<>()).add(url);
+		}else {
+			if(!listMap.containsKey(host)){
+				listMap.put(host,new ArrayList<>());
+			}
+			listMap.get(host).add(url);
+		}
 	}
 }

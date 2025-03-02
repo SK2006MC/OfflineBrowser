@@ -16,6 +16,10 @@ public class MyWebChromeClient extends WebChromeClient {
 		this.listener = listener;
 	}
 
+	public void setProgressListener(ProgressChangeListener listener){
+		this.listener = listener;
+	}
+
 	@Override
 	public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
 		jsLogger.logConsoleMessage(consoleMessage);
@@ -25,7 +29,9 @@ public class MyWebChromeClient extends WebChromeClient {
 	@Override
 	public void onProgressChanged(WebView webview, int progress) {
 		super.onProgressChanged(webview, progress);
-		listener.onChange(progress);
+		if(listener!=null){
+			listener.onChange(progress);
+		}
 	}
 
 	public interface ProgressChangeListener {

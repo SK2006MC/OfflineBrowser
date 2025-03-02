@@ -10,6 +10,8 @@ import androidx.annotation.Nullable;
 
 import com.sk.revisit.MyUtils;
 
+import org.jetbrains.annotations.Contract;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,7 +30,7 @@ public class WebStorageManager {
 	}
 
 	@Nullable
-	public WebResourceResponse getResponse(WebResourceRequest request) {
+	public WebResourceResponse getResponse(@NonNull WebResourceRequest request) {
 		MyUtils.requests.incrementAndGet();
 		if (!GET_METHOD.equals(request.getMethod())) {
 			utils.log(TAG, "Request method is not GET: " + request.getMethod());
@@ -47,20 +49,23 @@ public class WebStorageManager {
 
 		File localFile = new File(localPath);
 		if (localFile.exists()) {
-			if (MyUtils.shouldUpdate) {
-				utils.download(uri, createDownloadListener(uri, uriStr, localPath));
+			if (MyUtils.shouldUpdate&&MyUtils.isNetworkAvailable) {
+				utils.download(uri, createDownloadListener(uriStr, localPath));
 			}
 			return loadFromLocal(localFile);
 		} else {
 			if (MyUtils.isNetworkAvailable) {
-				utils.download(uri, createDownloadListener(uri, uriStr, localPath));
+				utils.download(uri, createDownloadListener(uriStr, localPath));
 				return loadFromLocal(localFile);
 			}
+			utils.saveReq(uriStr);
 			return new WebResourceResponse("text/html", UTF_8, new ByteArrayInputStream("No offline file available.".getBytes()));
 		}
 	}
 
-	private MyUtils.DownloadListener createDownloadListener(Uri uri, String uriStr, String localPath) {
+	@NonNull
+	@Contract("_, _ -> new")
+	private MyUtils.DownloadListener createDownloadListener(String uriStr, String localPath) {
 		return new MyUtils.DownloadListener() {
 			@Override
 			public void onSuccess(File file, Headers headers) {
@@ -70,7 +75,7 @@ public class WebStorageManager {
 			@Override
 			public void onFailure(Exception e) {
 				MyUtils.failed.incrementAndGet();
-				utils.saveReq(uri.getHost() + "," + uriStr);
+				utils.saveReq(uriStr);
 			}
 		};
 	}
