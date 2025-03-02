@@ -8,12 +8,12 @@ import com.sk.revisit.databinding.ActivityLogBinding;
 
 public class LogActivity extends AppCompatActivity {
 
-    ActivityLogBinding binding;
+	ActivityLogBinding binding;
 
-    @Override
-    protected void onCreate(Bundle arg0) {
-        super.onCreate(arg0);
-        binding = ActivityLogBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-    }
+	@Override
+	protected void onCreate(Bundle arg0) {
+		super.onCreate(arg0);
+		binding = ActivityLogBinding.inflate(getLayoutInflater());
+		setContentView(binding.getRoot());
+	}
 }

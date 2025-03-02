@@ -3,7 +3,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <android.widget.LinearLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -15,22 +15,13 @@
             android:text="@string/calculate_size" />
 
         <TextView
-            android:id="@+id/size"
+            android:id="@+id/total"
+            android:text="total"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-    </android.widget.LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/refresh" />
     </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -45,8 +36,26 @@
 
         <TextView
             android:id="@+id/prog"
+            android:text="prog"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/completed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="completed" />
+
+        <TextView
+            android:id="@+id/downloadStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="status" />
+
     </LinearLayout>
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/hosts"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </LinearLayout>

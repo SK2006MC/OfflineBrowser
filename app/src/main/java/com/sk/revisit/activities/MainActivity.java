@@ -1,6 +1,7 @@
 package com.sk.revisit.activities;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -8,6 +9,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -15,12 +17,13 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Toast;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
@@ -31,39 +34,40 @@ import com.sk.revisit.jsact.JSConsoleLogger;
 import com.sk.revisit.jsact.JSWebViewManager;
 import com.sk.revisit.jsv2.JSAutoCompleteTextView;
 import com.sk.revisit.managers.MySettingsManager;
-import com.sk.revisit.webview.MyWebViewClient;
 import com.sk.revisit.managers.WebStorageManager;
+import com.sk.revisit.webview.MyWebViewClient;
 
 public class MainActivity extends AppCompatActivity {
 
+	private static final String TAG = "MainActivity";
+	String fm = "requests %d\nresolved %d\nfailed %d";
+	TextView inf;
+	MySettingsManager settingsManager;
 	private EditText urlEditText;
 	private WebView mainWebView;
 	private NavigationView mainNavigationView;
 	private ScrollView jsConsoleScrollView;
-	private LinearLayout jsConsoleLayout,bg;
+	private LinearLayout jsConsoleLayout, bg;
 	private DrawerLayout mainDrawerLayout;
 	private JSAutoCompleteTextView jsInputTextView;
 	private ImageButton executeJsButton;
 	@SuppressLint("UseSwitchCompatOrMaterialCode")
 	private Switch su;
-	String fm="requests %d\nresolved %d\nfailed %d";
-	TextView inf;
-
 	// Managers and Utilities
 	private JSConsoleLogger jsConsoleLogger;
 	private JSWebViewManager jsWebViewManager;
 	private MyUtils myUtils;
-	MySettingsManager settingsManager;
 	// Binding
 	private ActivityMainBinding binding;
-
+	private BroadcastReceiver broadcastReceiver;
+	private ConnectivityManager.NetworkCallback networkCallback;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		settingsManager=new MySettingsManager(this);
+		settingsManager = new MySettingsManager(this);
 
-		if(settingsManager.getIsFirst()){
+		if (settingsManager.getIsFirst()) {
 			startMyActivity(FirstActivity.class);
 		}
 
@@ -87,8 +91,31 @@ public class MainActivity extends AppCompatActivity {
 
 		jsInputTextView.setWebView(mainWebView);
 
-		su.setOnCheckedChangeListener((v,c)-> MyUtils.shouldUpdate=c);
+		su.setOnCheckedChangeListener((v, c) -> MyUtils.shouldUpdate = c);
 
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (getIntent().getBooleanExtra("loadurl", false)) {
+			String url = getIntent().getStringExtra("url");
+			if (url != null) {
+				mainWebView.loadUrl(url);
+				urlEditText.setText(url);
+			}
+		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		myUtils.shutdown();
+		// Unregister network callback to prevent memory leaks
+		ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		if (networkCallback != null) {
+			connectivityManager.unregisterNetworkCallback(networkCallback);
+		}
 	}
 
 	private void initializeUI() {
@@ -103,18 +130,24 @@ public class MainActivity extends AppCompatActivity {
 		jsConsoleScrollView = binding.consoleScrollView;
 		executeJsButton = binding.executeJsBtn;
 
-		bg=headerView.findViewById(R.id.bg);
-		inf=headerView.findViewById(R.id.inf);
-		inf.setOnClickListener((v)-> inf.setText(String.format(fm,MyUtils.requests, MyUtils.resolved,MyUtils.failed)));
+		bg = headerView.findViewById(R.id.bg);
+		inf = headerView.findViewById(R.id.inf);
+		inf.setOnClickListener((v) -> inf.setText(String.format(fm, MyUtils.requests.get(), MyUtils.resolved.get(), MyUtils.failed.get())));
 	}
 
 	private void initNetworkChangeListener() {
 		ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkRequest request = new NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR).addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build();
-		connectivityManager.registerNetworkCallback(request, new ConnectivityManager.NetworkCallback() {
+		NetworkRequest request = new NetworkRequest.Builder()
+				.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+				.addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+				.addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+				.build();
+
+		networkCallback = new ConnectivityManager.NetworkCallback() {
 			@Override
 			public void onAvailable(@NonNull Network network) {
 				super.onAvailable(network);
+				Log.d(TAG, "Network Available");
 				MyUtils.isNetworkAvailable = true;
 				changeBgColor(true);
 			}
@@ -122,23 +155,24 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onLost(@NonNull Network network) {
 				super.onLost(network);
+				Log.d(TAG, "Network Lost");
 				MyUtils.isNetworkAvailable = false;
 				changeBgColor(false);
 			}
-		});
+		};
+		connectivityManager.registerNetworkCallback(request, networkCallback);
 	}
 
-	@SuppressLint("ResourceAsColor")
-	public void changeBgColor(boolean o){
-		runOnUiThread(()->{
-			if(o){
-				bg.setBackgroundColor(R.color.black);
-			}else {
-				bg.setBackgroundColor(R.color.teal_700);
+	public void changeBgColor(boolean isAvailable) {
+		runOnUiThread(() -> {
+			if (isAvailable) {
+				bg.setBackgroundColor(ContextCompat.getColor(this, R.color.black));
+			} else {
+				bg.setBackgroundColor(ContextCompat.getColor(this, R.color.teal_700));
 			}
-
 		});
 	}
+
 	private void initJSConsole() {
 		executeJsButton.setOnClickListener(v -> {
 			String code = jsInputTextView.getText().toString();
@@ -183,21 +217,43 @@ public class MainActivity extends AppCompatActivity {
 				showAlert(e.toString());
 			}
 		});
+
+		urlEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView v, int actionId, android.view.KeyEvent event) {
+				try {
+					mainWebView.loadUrl(urlEditText.getText().toString());
+				} catch (Exception e) {
+					showAlert(e.toString());
+				}
+				return true;
+			}
+		});
 	}
+
 
 	@SuppressLint("SetJavaScriptEnabled")
 	private void initWebView(@NonNull WebView webView) {
-	
-		webView.setWebViewClient(new MyWebViewClient(new WebStorageManager(myUtils)));
+
+		MyWebViewClient client = new MyWebViewClient(new WebStorageManager(myUtils));
+		client.setUrlLoadListener(new MyWebViewClient.UrlLoadListener() {
+			@Override
+			public void load(String url) {
+				runOnUiThread(() -> {
+					urlEditText.setText(url);
+				});
+			}
+		});
+
+		webView.setWebViewClient(client);
 		WebSettings webSettings = webView.getSettings();
 		webSettings.setAllowContentAccess(true);
 		webSettings.setAllowFileAccess(true);
-		webSettings.setAllowFileAccessFromFileURLs(true);
-		webSettings.setAllowUniversalAccessFromFileURLs(true);
 		webSettings.setDatabaseEnabled(true);
 		webSettings.setDomStorageEnabled(true);
 		webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
 		webSettings.setJavaScriptEnabled(true);
+		// should remove this line in production
 		webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 		webSettings.setUseWideViewPort(true);
 		// webSettings.setUserAgentString(); // Consider setting a custom User-Agent if needed
@@ -218,12 +274,6 @@ public class MainActivity extends AppCompatActivity {
 		} catch (Exception e) {
 			showAlert(e.toString());
 		}
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		myUtils.shutdown();
 	}
 
 	private void startMyActivity(Class<?> activityClass) {
