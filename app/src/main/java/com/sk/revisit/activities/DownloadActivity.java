@@ -60,29 +60,32 @@ public class DownloadActivity extends AppCompatActivity {
     }
 
     void initRecyclerView() {
-        List<Host> hosts2 = new ArrayList<>();
-        hostAdapter = new HostAdapter(hosts2);
-        hostRecycler = binding.hosts;
+    List<Host> hostList = new ArrayList<>();
+    hostAdapter = new HostAdapter(hostList);
+    hostRecycler = binding.hosts;
 
-        Set<String> hostsStr = hosts.keySet();
-        for (String host : hostsStr) {
-            Host host2 = new Host(host);
-            hosts2.add(host2);
-
-            List<Url> urls = new ArrayList<>();
-            List<String> urls1 = hosts.get(host);
-
-            if (urls1 != null) {
-                for (String url : urls1) {
-                    urls.add(new Url(url));
-                }
-                host2.setUrls(urls);
+    // Populate the host list
+    for (Map.Entry<String, List<String>> entry : hosts.entrySet()) {
+        String hostName = entry.getKey();
+        List<String> urlStrings = entry.getValue();
+        
+        Host host = new Host(hostName);
+        List<Url> urlList = new ArrayList<>();
+        
+        if (urlStrings != null) {
+            for (String urlString : urlStrings) {
+                Url url = new Url(urlString);
+                urlList.add(url);
             }
         }
-
-        hostRecycler.setAdapter(hostAdapter);
-        hostAdapter.notifyDataSetChanged();
+        
+        host.setUrls(urlList);
+        hostList.add(host);
     }
+
+    hostRecycler.setAdapter(hostAdapter);
+    hostAdapter.notifyDataSetChanged();
+}
 
     void initUI() {
         statusTextView = binding.downloadStatus;
