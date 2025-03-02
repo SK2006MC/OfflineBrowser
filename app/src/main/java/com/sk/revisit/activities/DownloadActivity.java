@@ -43,7 +43,7 @@ public class DownloadActivity extends AppCompatActivity {
     private int urlCount = 0;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     public RecyclerView hostRecycler;
-    HostAdapter hostAdapter;
+    private HostAdapter hostAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,15 +72,16 @@ public class DownloadActivity extends AppCompatActivity {
             List<Url> urls = new ArrayList<>();
             List<String> urls1 = hosts.get(host);
 
-            assert urls1 != null;
-            for (String url : urls1) {
-                urls.add(new Url(url));
+            if (urls1 != null) {
+                for (String url : urls1) {
+                    urls.add(new Url(url));
+                }
+                host2.setUrls(urls);
             }
-
-            host2.setUrls(urls);
         }
 
         hostRecycler.setAdapter(hostAdapter);
+        hostAdapter.notifyDataSetChanged();
     }
 
     void initUI() {
@@ -97,7 +98,7 @@ public class DownloadActivity extends AppCompatActivity {
         File file = new File(filePath);
         if (!file.exists()) {
             Log.e(TAG, "req.txt not found at: " + filePath);
-            Toast.makeText(this, "req.txt not found!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "req.txt not found at " + filePath, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -106,15 +107,17 @@ public class DownloadActivity extends AppCompatActivity {
             while ((line = reader.readLine()) != null) {
                 String url = line.trim();
                 Uri uri = Uri.parse(url);
-                if (!url.isEmpty()) {
-                    add(hosts, uri.getHost(), url);
+                String host = uri.getHost();
+                if (!url.isEmpty() && host != null) {
+                    add(hosts, host, url);
                     urlCount++;
                 }
             }
         } catch (IOException e) {
             Log.e(TAG, "Error reading req.txt", e);
-            Toast.makeText(this, "Error reading req.txt", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error reading req.txt: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+
         mainHandler.post(() -> statusTextView.setText("Urls to download: " + urlCount));
     }
 
