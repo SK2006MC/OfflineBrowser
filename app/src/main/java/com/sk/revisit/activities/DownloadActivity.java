@@ -1,20 +1,17 @@
 package com.sk.revisit.activities;
 
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.sk.revisit.Log;
 import com.sk.revisit.MyUtils;
-import com.sk.revisit.adapter.HostAdapter;
-import com.sk.revisit.data.Host;
+import com.sk.revisit.R;
+import com.sk.revisit.adapter.UrlAdapter;
 import com.sk.revisit.data.Url;
 import com.sk.revisit.databinding.ActivityDownloadBinding;
 import com.sk.revisit.managers.MySettingsManager;
@@ -24,131 +21,96 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class DownloadActivity extends AppCompatActivity {
 
-    private static final String TAG = "DownloadActivity";
-    private ActivityDownloadBinding binding;
-    private MyUtils myUtils;
-    private Map<String, List<String>> hosts = new HashMap<>(); // Initialize the map
-    private MySettingsManager settingsManager;
-    private TextView statusTextView;
+	private static final String TAG = "DownloadActivity";
+	private final Set<String> urlsStr = new HashSet<>();
+	private ActivityDownloadBinding binding;
+	private MyUtils myUtils;
+	private MySettingsManager settingsManager;
+	UrlAdapter urlAdapter;
 
-    private final AtomicLong totalSize = new AtomicLong(0);
-    private int urlCount = 0;
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    public RecyclerView hostRecycler;
-    private HostAdapter hostAdapter;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		binding = ActivityDownloadBinding.inflate(getLayoutInflater());
+		setContentView(binding.getRoot());
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = ActivityDownloadBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+		settingsManager = new MySettingsManager(this);
+		myUtils = new MyUtils(this, settingsManager.getRootStoragePath());
 
-        settingsManager = new MySettingsManager(this);
-        myUtils = new MyUtils(this, settingsManager.getRootStoragePath());
+		loadUrisFromFile();
+		initUI();
+		initRecyclerView();
+	}
 
-        initUI();
-        loadUrlsFromFile();
-        initRecyclerView();
-    }
+	void initRecyclerView() {
+		List<Url> urlList = new ArrayList<>();
 
-    void initRecyclerView() {
-    List<Host> hostList = new ArrayList<>();
-    hostAdapter = new HostAdapter(hostList);
-    hostRecycler = binding.hosts;
+		for (String urlStr : urlsStr) {
+			urlList.add(new Url(urlStr));
+		}
 
-    // Populate the host list
-    for (Map.Entry<String, List<String>> entry : hosts.entrySet()) {
-        String hostName = entry.getKey();
-        List<String> urlStrings = entry.getValue();
-        
-        Host host = new Host(hostName);
-        List<Url> urlList = new ArrayList<>();
-        
-        if (urlStrings != null) {
-            for (String urlString : urlStrings) {
-                Url url = new Url(urlString);
-                urlList.add(url);
-            }
-        }
-        
-        host.setUrls(urlList);
-        hostList.add(host);
-    }
+		urlAdapter = new UrlAdapter(urlList);
+		binding.urls.setAdapter(urlAdapter);
 
-    hostRecycler.setAdapter(hostAdapter);
-    hostAdapter.notifyDataSetChanged();
-}
+		binding.urls.setLayoutManager(new LinearLayoutManager(this));
+		DividerItemDecoration decoration=new DividerItemDecoration(
+				binding.urls.getContext(),
+				LinearLayoutManager.VERTICAL
+		);
+		decoration.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(this,R.drawable.divider)));
+		binding.urls.addItemDecoration(decoration);
+	}
 
-    void initUI() {
-        statusTextView = binding.downloadStatus;
-        hostRecycler = binding.hosts;
-        binding.total.setText("0 B");
-        binding.buttonDownload.setOnClickListener(v -> {
-            // Implement download functionality here
-        });
-    }
+	public void refreshUrls(){
+		urlAdapter.notifyDataSetChanged();
+	}
 
-    private void loadUrlsFromFile() {
-        String filePath = settingsManager.getRootStoragePath() + File.separator + "req.txt";
-        File file = new File(filePath);
-        if (!file.exists()) {
-            Log.e(TAG, "req.txt not found at: " + filePath);
-            Toast.makeText(this, "req.txt not found at " + filePath, Toast.LENGTH_SHORT).show();
-            return;
-        }
+	private void loadUrisFromFile() {
+		String filePath = settingsManager.getRootStoragePath() + File.separator + "req.txt";
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String url = line.trim();
-                Uri uri = Uri.parse(url);
-                String host = uri.getHost();
-                if (!url.isEmpty() && host != null) {
-                    add(hosts, host, url);
-                    urlCount++;
-                }
-            }
-        } catch (IOException e) {
-            Log.e(TAG, "Error reading req.txt", e);
-            Toast.makeText(this, "Error reading req.txt: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+		File file = new File(filePath);
 
-        mainHandler.post(() -> statusTextView.setText("Urls to download: " + urlCount));
-    }
+		if (!file.exists()) {
+			Log.e(TAG, "req.txt not found at: " + filePath);
+			alert("req.txt not found at: " + filePath);
+			return;
+		}
 
-    private String getSize(long size) {
-        final String[] units = new String[]{"B", "KB", "MB", "GB", "TB"};
-        int index = 0;
-        double s = size;
-        while (s >= 1024 && index < units.length - 1) {
-            s /= 1024.0;
-            index++;
-        }
-        return String.format("%.2f %s", s, units[index]);
-    }
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				String url = line.trim();
+				urlsStr.add(url);
+			}
+		} catch (IOException e) {
+			alert("Error reading req.txt");
+		}
+	}
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        myUtils.shutdown();
-    }
+	void download(){
 
-    public void add(Map<String, List<String>> listMap, String host, String url) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            listMap.computeIfAbsent(host, k -> new ArrayList<>()).add(url);
-        } else {
-            if (!listMap.containsKey(host)) {
-                listMap.put(host, new ArrayList<>());
-            }
-            listMap.get(host).add(url);
-        }
-    }
+	}
+	void initUI() {
+		binding.total.setText("0 B");
+		binding.refreshButton.setOnClickListener(v->{
+			refreshUrls();
+		});
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		myUtils.shutdown();
+	}
+
+	void alert(String msg) {
+		Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+	}
 }

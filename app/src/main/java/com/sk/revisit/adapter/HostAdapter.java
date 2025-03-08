@@ -27,7 +27,7 @@ public class HostAdapter extends RecyclerView.Adapter<HostAdapter.HostViewHolder
 	@NonNull
 	@Override
 	public HostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-		ItemHostBinding binding = ItemHostBinding.inflate(LayoutInflater.from(parent.getContext()),parent,false);
+		ItemHostBinding binding = ItemHostBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
 		return new HostViewHolder(binding);
 	}
 
@@ -38,10 +38,10 @@ public class HostAdapter extends RecyclerView.Adapter<HostAdapter.HostViewHolder
 
 		binding.hostText.setText(host.getName());
 		binding.expandhost.setOnClickListener(v -> {
-			host.isExpanded=!host.isExpanded;
+			host.isExpanded = !host.isExpanded;
 		});
 		binding.hostCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-			host.isSelected=isChecked;
+			host.isSelected = isChecked;
 		});
 		binding.hostSize.setText(String.valueOf(host.totalSize));
 		binding.hostProgressbar.setProgress(0);
@@ -60,9 +60,10 @@ public class HostAdapter extends RecyclerView.Adapter<HostAdapter.HostViewHolder
 
 	public static class HostViewHolder extends RecyclerView.ViewHolder {
 		ItemHostBinding binding;
+
 		public HostViewHolder(@NonNull ItemHostBinding binding) {
 			super(binding.getRoot());
-			this.binding=binding;
+			this.binding = binding;
 		}
 	}
 }

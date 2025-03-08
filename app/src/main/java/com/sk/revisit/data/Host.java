@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Host {
-	 public String name;
-	 public boolean isSelected;
-	 public boolean isExpanded;
-	 public List<Url> urls;
-	 public long totalSize; // For aggregated size of URLs under this host
+	public String name;
+	public boolean isSelected;
+	public boolean isExpanded;
+	public List<Url> urls;
+	public long totalSize;
 
 	public Host(String name) {
 		this.name = name;
@@ -38,10 +38,6 @@ public class Host {
 		return isExpanded;
 	}
 
-	public void setExpanded(boolean expanded) {
-		isExpanded = expanded;
-	}
-
 	public List<Url> getUrls() {
 		return urls;
 	}
@@ -64,5 +60,9 @@ public class Host {
 
 	public boolean getExpanded() {
 		return isExpanded;
+	}
+
+	public void setExpanded(boolean expanded) {
+		isExpanded = expanded;
 	}
 }

@@ -1,65 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	android:padding="4dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/calc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/calculate_size" />
+		<Button
+			android:id="@+id/refresh_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Refresh"/>
+		<Button
+			android:id="@+id/calc"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/calculate_size" />
 
-        <TextView
-            android:layout_marginStart="10dp"
-            android:id="@+id/total"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="total"
-            android:textColor="@color/black"
-            android:textSize="20sp" />
+		<TextView
+			android:id="@+id/total"
+			style="@style/AppTheme"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="10dp"
+			android:text="@string/total"
+			android:textSize="20sp" />
 
-    </LinearLayout>
+	</LinearLayout>
 
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/button_download"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/download" />
+		<Button
+			android:id="@+id/button_download"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/download" />
 
-        <TextView
-            android:id="@+id/prog"
-            android:text="prog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+		<TextView
+			android:id="@+id/prog"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="prog"
+			android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/completed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="completed" />
+		<TextView
+			android:id="@+id/completed"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="completed"
+			android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/downloadStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="status" />
+		<TextView
+			android:id="@+id/downloadStatus"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="status"
+			android:visibility="gone" />
 
-    </LinearLayout>
+	</LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/hosts"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+	<androidx.recyclerview.widget.RecyclerView
+		android:id="@+id/urls"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent" />
 
 </LinearLayout>

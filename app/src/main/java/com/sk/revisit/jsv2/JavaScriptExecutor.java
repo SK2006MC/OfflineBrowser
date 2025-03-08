@@ -1,9 +1,10 @@
 // JavaScriptExecutor.java
 package com.sk.revisit.jsv2;
 
-import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
+
+import com.sk.revisit.Log;
 
 /**
  * Executes JavaScript within a WebView and returns results asynchronously.

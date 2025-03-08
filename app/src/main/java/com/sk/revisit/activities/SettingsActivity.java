@@ -36,6 +36,10 @@ public class SettingsActivity extends AppCompatActivity {
 		});
 	}
 
+	void initUI() {
+		binding.reqFileName.setText(settingsManager.getReqFileName());
+	}
+
 	private void openDirectoryChooser() {
 		Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
 		startActivityForResult(intent, REQUEST_CODE_PICK_FOLDER);

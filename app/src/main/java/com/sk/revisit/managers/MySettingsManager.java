@@ -9,6 +9,7 @@ public class MySettingsManager {
 	private static final String KEY_IS_FIRST = "isfirst";
 
 	private final SharedPreferences prefs;
+	private String reqFileName = "req.txt";
 
 	public MySettingsManager(Context context) {
 		prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
@@ -28,5 +29,13 @@ public class MySettingsManager {
 
 	public void setIsFirst(boolean o) {
 		prefs.edit().putBoolean(KEY_IS_FIRST, o).apply();
+	}
+
+	public String getReqFileName() {
+		return reqFileName;
+	}
+
+	public void setReqFileName(String reqFileName) {
+		this.reqFileName = reqFileName;
 	}
 }

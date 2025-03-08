@@ -1,7 +1,6 @@
 package com.sk.revisit.activities;
 
 import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -9,58 +8,55 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
+import com.sk.revisit.Log;
 import com.sk.revisit.MyUtils;
 import com.sk.revisit.R;
 import com.sk.revisit.databinding.ActivityMainBinding;
+import com.sk.revisit.databinding.NavHeaderBinding;
+import com.sk.revisit.databinding.NavJsBinding;
 import com.sk.revisit.jsact.JSConsoleLogger;
 import com.sk.revisit.jsact.JSWebViewManager;
 import com.sk.revisit.jsv2.JSAutoCompleteTextView;
 import com.sk.revisit.managers.MySettingsManager;
 import com.sk.revisit.managers.WebStorageManager;
+import com.sk.revisit.webview.MyDownloadListener;
 import com.sk.revisit.webview.MyWebChromeClient;
 import com.sk.revisit.webview.MyWebViewClient;
 
 public class MainActivity extends AppCompatActivity {
 
 	private static final String TAG = "MainActivity";
-	String fm = "requests %d\nresolved %d\nfailed %d";
+	final String fm = "requests %d\nresolved %d\nfailed %d";
 	TextView inf;
 	MySettingsManager settingsManager;
 	private EditText urlEditText;
 	private WebView mainWebView;
-	private NavigationView mainNavigationView;
 	private ScrollView jsConsoleScrollView;
 	private LinearLayout jsConsoleLayout, bg;
-	private DrawerLayout mainDrawerLayout;
 	private JSAutoCompleteTextView jsInputTextView;
 	private ImageButton executeJsButton;
 	@SuppressLint("UseSwitchCompatOrMaterialCode")
-	private Switch su;
-	// Managers and Utilities
+	private SwitchCompat su;
 	private JSConsoleLogger jsConsoleLogger;
 	private JSWebViewManager jsWebViewManager;
 	private MyUtils myUtils;
-	// Binding
 	private ActivityMainBinding binding;
-	private BroadcastReceiver broadcastReceiver;
 	private ConnectivityManager.NetworkCallback networkCallback;
 
 	@Override
@@ -80,13 +76,14 @@ public class MainActivity extends AppCompatActivity {
 
 		// Initialize Managers and Utilities
 		myUtils = new MyUtils(this, settingsManager.getRootStoragePath());
+		myUtils.log(TAG, "hi");
 		jsConsoleLogger = new JSConsoleLogger(this, jsConsoleLayout, jsConsoleScrollView);
 		jsWebViewManager = new JSWebViewManager(this, mainWebView, jsConsoleLogger);
 
 		// Initialize components
 		initNetworkChangeListener();
 		initJSConsole();
-		initNavView(mainNavigationView);
+		initNavView();
 		initWebView(mainWebView);
 		initUrlEditText(urlEditText, mainWebView);
 
@@ -96,18 +93,18 @@ public class MainActivity extends AppCompatActivity {
 		initProgressBar(mainWebView);
 	}
 
-	void initProgressBar(WebView webView){
-		MyWebChromeClient chromeClient =(MyWebChromeClient) webView.getWebChromeClient();
+	void initProgressBar(WebView webView) {
+		MyWebChromeClient chromeClient = (MyWebChromeClient) webView.getWebChromeClient();
 
-		chromeClient.setProgressListener(progress -> {
-			binding.pageLoad.setProgress(progress);
-		});
+		if (chromeClient != null) {
+			chromeClient.setProgressListener(progress -> binding.pageLoad.setProgress(progress));
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (getIntent().getBooleanExtra("loadurl", false)) {
+		if (getIntent().getBooleanExtra("loadUrl", false)) {
 			String url = getIntent().getStringExtra("url");
 			if (url != null) {
 				mainWebView.loadUrl(url);
@@ -128,20 +125,20 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void initializeUI() {
-		mainDrawerLayout = binding.drawerLayout;
-		mainNavigationView = binding.myNav;
-		View headerView = mainNavigationView.getHeaderView(0);
-		urlEditText = headerView.findViewById(R.id.urlEditText);
-		su = headerView.findViewById(R.id.su);
-		mainWebView = binding.myWebView;
-		jsInputTextView = binding.jsInput;
-		jsConsoleLayout = binding.consoleLayout;
-		jsConsoleScrollView = binding.consoleScrollView;
-		executeJsButton = binding.executeJsBtn;
-
-		bg = headerView.findViewById(R.id.bg);
-		inf = headerView.findViewById(R.id.inf);
+		NavHeaderBinding navHeaderBinding = NavHeaderBinding.bind(binding.myNav.getHeaderView(0));
+		urlEditText = navHeaderBinding.urlEditText;
+		su = navHeaderBinding.su;
+		bg = navHeaderBinding.bg;
+		inf = navHeaderBinding.inf;
 		inf.setOnClickListener((v) -> inf.setText(String.format(fm, MyUtils.requests.get(), MyUtils.resolved.get(), MyUtils.failed.get())));
+
+		mainWebView = binding.myWebView;
+
+		NavJsBinding binding1 = NavJsBinding.bind(binding.navJs.getHeaderView(0));
+		jsInputTextView = binding1.jsInput;
+		jsConsoleLayout = binding1.consoleLayout;
+		jsConsoleScrollView = binding1.consoleScrollView;
+		executeJsButton = binding1.executeJsBtn;
 	}
 
 	private void initNetworkChangeListener() {
@@ -194,8 +191,9 @@ public class MainActivity extends AppCompatActivity {
 		});
 	}
 
-	private void initNavView(@NonNull NavigationView navigationView) {
-		navigationView.setNavigationItemSelectedListener(item -> {
+	private void initNavView() {
+		binding.myNav.setNavigationItemSelectedListener(item -> {
+
 			int id = item.getItemId();
 			if (id == R.id.nav_dn) {
 				startMyActivity(DownloadActivity.class);
@@ -207,8 +205,10 @@ public class MainActivity extends AppCompatActivity {
 				startMyActivity(AboutActivity.class);
 			} else if (id == R.id.nav_web) {
 				startMyActivity(WebpagesActivity.class);
-			} else if (id == R.id.nav_log) {
+			} else if (id == R.id.nav_logs) {
 				startMyActivity(LogActivity.class);
+			} else if (id == R.id.nav_utils) {
+				startMyActivity(UtilsActivity.class);
 			} else if (id == R.id.refresh) {
 				mainWebView.reload();
 			}
@@ -227,16 +227,13 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-		urlEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView v, int actionId, android.view.KeyEvent event) {
-				try {
-					mainWebView.loadUrl(urlEditText.getText().toString());
-				} catch (Exception e) {
-					showAlert(e.toString());
-				}
-				return true;
+		urlEditText.setOnEditorActionListener((v, actionId, event) -> {
+			try {
+				mainWebView.loadUrl(urlEditText.getText().toString());
+			} catch (Exception e) {
+				showAlert(e.toString());
 			}
+			return true;
 		});
 	}
 
@@ -245,19 +242,15 @@ public class MainActivity extends AppCompatActivity {
 	private void initWebView(@NonNull WebView webView) {
 
 		MyWebViewClient client = new MyWebViewClient(new WebStorageManager(myUtils));
-		client.setUrlLoadListener(new MyWebViewClient.UrlLoadListener() {
-			@Override
-			public void load(String url) {
-				runOnUiThread(() -> {
-					urlEditText.setText(url);
-				});
-			}
-		});
+		client.setUrlLoadListener(url -> runOnUiThread(() -> urlEditText.setText(url)));
+
+		webView.setDownloadListener(new MyDownloadListener(this));
 
 		webView.setWebViewClient(client);
 		WebSettings webSettings = webView.getSettings();
 		webSettings.setAllowContentAccess(true);
 		webSettings.setAllowFileAccess(true);
+		webSettings.setAllowUniversalAccessFromFileURLs(true);
 		webSettings.setDatabaseEnabled(true);
 		webSettings.setDomStorageEnabled(true);
 		webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
@@ -270,11 +263,13 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	public void onBackPressed() {
+		DrawerLayout drawerLayout = binding.drawerLayout;
+		NavigationView mainNav = binding.myNav,JSNav=binding.navJs;
 		try {
-			if (mainDrawerLayout.isDrawerOpen(mainNavigationView)) {
-				mainDrawerLayout.closeDrawer(mainNavigationView);
-			} else if (mainDrawerLayout.isDrawerOpen(R.id.jsnav)) {
-				mainDrawerLayout.closeDrawer(R.id.jsnav);
+			if (drawerLayout.isDrawerOpen(mainNav)) {
+				drawerLayout.closeDrawer(mainNav);
+			} else if (drawerLayout.isDrawerOpen(JSNav)) {
+				drawerLayout.closeDrawer(JSNav);
 			} else if (mainWebView.canGoBack()) {
 				mainWebView.goBack();
 			} else {

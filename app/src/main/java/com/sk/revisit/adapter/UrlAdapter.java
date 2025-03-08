@@ -1,7 +1,5 @@
 package com.sk.revisit.adapter;
 
-import android.content.ClipData;
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -28,20 +26,14 @@ public class UrlAdapter extends RecyclerView.Adapter<UrlAdapter.UrlHolderView> {
 	@NonNull
 	@Override
 	public UrlHolderView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-		ItemUrlBinding binding = ItemUrlBinding.inflate(LayoutInflater.from(parent.getContext()),parent,false);
+		ItemUrlBinding binding = ItemUrlBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
 		return new UrlHolderView(binding);
 	}
 
 	@Override
 	public void onBindViewHolder(@NonNull UrlHolderView holder, int position) {
-		ItemUrlBinding binding=holder.binding;
 		Url url = urls.get(position);
-		binding.urlText.setText(url.getUrl());
-		binding.urlSize.setText(String.valueOf(url.getSize()));
-		binding.urlCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-			url.setSelected(isChecked);
-		});
-
+		holder.bind(url);
 	}
 
 	@Override
@@ -52,9 +44,14 @@ public class UrlAdapter extends RecyclerView.Adapter<UrlAdapter.UrlHolderView> {
 
 	public static class UrlHolderView extends RecyclerView.ViewHolder {
 		public ItemUrlBinding binding;
+
 		public UrlHolderView(@NonNull ItemUrlBinding binding) {
 			super(binding.getRoot());
 			this.binding = binding;
+		}
+
+		public void bind(@NonNull Url url) {
+			binding.urlText.setText(url.getUrl());
 		}
 	}
 }

@@ -3,6 +3,7 @@ package com.sk.revisit;
 import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
@@ -15,7 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ConcurrentHashMap;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -33,9 +34,6 @@ public class MyUtils {
 	private static final String TAG = "MyUtils";
 	private static final int MAX_THREADS = 8;
 	private static final String INDEX_HTML = "index.html";
-	private static final long INVALID_SIZE = -1;
-	private static final long REMOTE_SIZE_CACHE_EXPIRATION_MILLIS = 5 * 60 * 1000; // 5 minutes
-	// Use atomic counters for thread safety
 	public static AtomicLong requests = new AtomicLong(0);
 	public static AtomicLong resolved = new AtomicLong(0);
 	public static AtomicLong failed = new AtomicLong(0);
@@ -43,41 +41,42 @@ public class MyUtils {
 	public final SQLiteDBM dbm;
 	public final String rootPath;
 	public final Context context;
+	public final OkHttpClient client;
 	private final ExecutorService executorService;
-	private final ExecutorService loggingExecutor;
-	private final OkHttpClient client;
 	private final LoggerHelper logger;
-	// Cache for remote file sizes (to avoid repeating HEAD requests)
-	private final ConcurrentHashMap<String, CachedSize> remoteSizeCache = new ConcurrentHashMap<>();
+	public MimeTypeHelper mimeTypeHelper;
 
 	public MyUtils(Context context, String rootPath) {
 		this.rootPath = rootPath;
 		this.context = context;
 		this.executorService = Executors.newFixedThreadPool(MAX_THREADS, new CustomThreadFactory());
-		this.loggingExecutor = Executors.newSingleThreadExecutor(new LoggingThreadFactory());
 		this.client = new OkHttpClient.Builder()
 				.connectTimeout(10, TimeUnit.SECONDS)
 				.readTimeout(30, TimeUnit.SECONDS)
 				.build();
 		this.dbm = new SQLiteDBM(context, rootPath + "/revisit.db");
-		this.logger = new LoggerHelper(context, rootPath, loggingExecutor);
+		this.logger = new LoggerHelper(context, rootPath);
+		this.mimeTypeHelper = new MimeTypeHelper(this);
 	}
 
-	// Logging methods use the separate logging executor.
 	public void log(String tag, String msg, Exception e) {
-		loggingExecutor.execute(() -> logger.log(tag + "\t" + msg + "\t" + e.toString()));
+		logger.log(tag + "\t" + msg + "\t" + e.toString());
 	}
 
 	public void log(String tag, String msg) {
-		loggingExecutor.execute(() -> logger.log(tag + "\t" + msg));
+		logger.log(tag + "\t" + msg);
 	}
 
 	public void saveReq(String m) {
-		loggingExecutor.execute(() -> logger.saveReq(m));
+		logger.saveReq(m);
+	}
+
+	public void saveUrl(String uriStr) {
+		logger.saveUrl(uriStr);
 	}
 
 	public void saveResp(String m) {
-		loggingExecutor.execute(() -> logger.saveResp(m));
+		logger.saveResp(m);
 	}
 
 	/**
@@ -85,19 +84,26 @@ public class MyUtils {
 	 */
 	public String buildLocalPath(@NonNull Uri uri) {
 		String lastPathSegment = uri.getLastPathSegment();
-		String host = uri.getHost();
-		String encodedPath = uri.getEncodedPath();
+		String host = uri.getAuthority();
+		String path = uri.getPath();
+		String query = uri.getQuery();
 
-		if (TextUtils.isEmpty(host) || TextUtils.isEmpty(encodedPath)) {
+		if (query != null) {
+			query = Base64.encodeToString(query.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
+		}
+
+		if (TextUtils.isEmpty(host) || TextUtils.isEmpty(path)) {
 			log(TAG, "Invalid URI: Host or path is empty.");
 			return null;
 		}
 
-		String localPath = rootPath + File.separator + host + encodedPath;
+		String localPath = rootPath + File.separator + host + path;
 
 		if (lastPathSegment == null || !lastPathSegment.contains(".")) {
 			return localPath.endsWith("/") ? localPath + INDEX_HTML : localPath + File.separator + INDEX_HTML;
 		}
+
+		log(uri.toString(), localPath + ",query=" + query);
 		return localPath;
 	}
 
@@ -107,42 +113,16 @@ public class MyUtils {
 		return extension != null ? MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) : "application/octet-stream";
 	}
 
-	/**
-	 * Gets the size of a local file.
-	 */
-	public long getSizeFromLocal(@NonNull String filePath) {
-		File file = new File(filePath);
-		return file.exists() ? file.length() : INVALID_SIZE;
+	public void createMimeTypeMeta(Uri uri) {
+		mimeTypeHelper.createMimeTypeMeta(uri);
 	}
 
-	/**
-	 * Gets the remote file size via a HEAD request. Uses a cache to avoid repeated network calls.
-	 */
-	public long getSizeFromUrl(@NonNull Uri uri) {
-		String key = uri.toString();
-		CachedSize cached = remoteSizeCache.get(key);
-		long now = System.currentTimeMillis();
-		if (cached != null && now - cached.timestamp < REMOTE_SIZE_CACHE_EXPIRATION_MILLIS) {
-			return cached.size;
-		}
+	public String getMimeTypeFromMeta(String filepath) {
+		return mimeTypeHelper.getMimeTypeFromMeta(filepath);
+	}
 
-		Request request = new Request.Builder()
-				.url(key)
-				.head()
-				.build();
-
-		try (Response response = client.newCall(request).execute()) {
-			if (response.isSuccessful() && response.body() != null) {
-				long size = response.body().contentLength();
-				remoteSizeCache.put(key, new CachedSize(size, now));
-				return size;
-			} else {
-				log(TAG, "Error getting size from URL: " + uri + ". Response code: " + response.code());
-			}
-		} catch (IOException e) {
-			log(TAG, "Error getting size from URL: " + uri, e);
-		}
-		return INVALID_SIZE;
+	public void createMimeTypeMetaFile(String filepath, String type) {
+		mimeTypeHelper.createMimeTypeMetaFile(filepath, type);
 	}
 
 	/**
@@ -153,13 +133,6 @@ public class MyUtils {
 			String localFilePath = buildLocalPath(uri);
 			if (localFilePath == null) {
 				listener.onFailure(new IOException("Failed to build local path for URI: " + uri));
-				return;
-			}
-
-			// Check if file already exists and is up to date
-			if (!shouldUpdate && new File(localFilePath).exists()) {
-				log(TAG, "File already exists, skipping download: " + localFilePath);
-				listener.onSuccess(new File(localFilePath), null);
 				return;
 			}
 
@@ -179,20 +152,23 @@ public class MyUtils {
 						listener.onFailure(new IOException("Download failed. Response code: " + response.code()));
 						return;
 					}
-
+					File outfile = prepareFile(localFilePath);
 					try (InputStream in = new BufferedInputStream(response.body().byteStream());
-						 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(localFilePath))) {
+						 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile))) {
 						byte[] buffer = new byte[8192];
 						int bytesRead;
 						while ((bytesRead = in.read(buffer)) != -1) {
 							out.write(buffer, 0, bytesRead);
 						}
 						out.flush();
+
 						log(TAG, "Downloaded: " + uri + " to " + localFilePath);
 						listener.onSuccess(new File(localFilePath), response.headers());
 
+						createMimeTypeMetaFile(localFilePath, response.body().contentType().toString());
+
 						// Store metadata asynchronously
-						loggingExecutor.execute(() ->
+						executorService.execute(() ->
 								dbm.insertIntoUrlsIfNotExists(uri, localFilePath, new File(localFilePath).length(), response.headers())
 						);
 
@@ -205,14 +181,21 @@ public class MyUtils {
 		});
 	}
 
-	private File prepareFile(String path) {
-		File file = new File(path);
-		File parentFile = file.getParentFile();
-		if (parentFile != null && !parentFile.exists() && !parentFile.mkdirs()) {
-			log(TAG, "Failed to create directory: " + parentFile.getAbsolutePath());
+	public File prepareFile(String filepath){
+		try {
+			File file = new File(filepath);
+			File parentDir = file.getParentFile();
+			if (parentDir != null && !parentDir.exists()) {
+				parentDir.mkdirs();
+			}
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+			return file;
+		}catch(Exception e){
+			Log.e(TAG,e.toString());
 			return null;
 		}
-		return file;
 	}
 
 	/**
@@ -220,7 +203,7 @@ public class MyUtils {
 	 */
 	public void shutdown() {
 		executorService.shutdown();
-		loggingExecutor.shutdown();
+		logger.shutdown();
 	}
 
 	/**
@@ -232,34 +215,12 @@ public class MyUtils {
 		void onFailure(Exception e);
 	}
 
-	// Thread factory for download tasks
 	private static class CustomThreadFactory implements ThreadFactory {
 		private int count = 0;
 
 		@Override
 		public Thread newThread(Runnable r) {
 			return new Thread(r, "MyUtils-Thread-" + count++);
-		}
-	}
-
-	// Thread factory for logging tasks (lower priority)
-	private static class LoggingThreadFactory implements ThreadFactory {
-		@Override
-		public Thread newThread(Runnable r) {
-			Thread t = new Thread(r, "MyUtils-Logging-Thread");
-			t.setPriority(Thread.MIN_PRIORITY);
-			return t;
-		}
-	}
-
-	// Simple class to cache remote file sizes
-	private static class CachedSize {
-		final long size;
-		final long timestamp;
-
-		CachedSize(long size, long timestamp) {
-			this.size = size;
-			this.timestamp = timestamp;
 		}
 	}
 }

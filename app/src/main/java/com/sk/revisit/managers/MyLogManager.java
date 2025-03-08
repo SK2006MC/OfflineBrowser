@@ -2,24 +2,27 @@ package com.sk.revisit.managers;
 
 import android.content.Context;
 
+import com.sk.revisit.Log;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 
 public class MyLogManager {
-	private final File file;
+	private static final String TAG = "MyLogManager";
+	public Context context;
 	private BufferedWriter writer;
 
 	public MyLogManager(Context context, String filePath) {
-		this.file = new File(filePath);
+		this.context = context;
+		File file = new File(filePath);
 		try {
 			if (!file.exists()) {
 				file.createNewFile();
 			}
 			this.writer = new BufferedWriter(new FileWriter(file, true));
-		} catch (IOException e) {
-			System.err.println("Error initializing MyLogManager: " + e.getMessage());
+		} catch (Exception e) {
+			Log.e(TAG,"Error initializing MyLogManager: " + e.getMessage());
 		}
 	}
 
@@ -28,8 +31,8 @@ public class MyLogManager {
 			writer.write(msg);
 			writer.newLine();
 			writer.flush();
-		} catch (IOException e) {
-			System.err.println("Error writing log: " + e.getMessage());
+		} catch (Exception e) {
+			Log.d(TAG,"Error writing log: " + e.getMessage());
 		}
 	}
 
@@ -38,8 +41,8 @@ public class MyLogManager {
 			writer.write(new String(b));
 			writer.newLine();
 			writer.flush();
-		} catch (IOException e) {
-			System.err.println("Error writing log bytes: " + e.getMessage());
+		} catch (Exception e) {
+			Log.e(TAG,"Error writing log bytes: " + e.getMessage());
 		}
 	}
 
@@ -47,8 +50,8 @@ public class MyLogManager {
 	public synchronized void close() {
 		try {
 			writer.close();
-		} catch (IOException e) {
-			System.err.println("Error closing log writer: " + e.getMessage());
+		} catch (Exception e) {
+			Log.e(TAG,"Error closing log writer: " + e.getMessage());
 		}
 	}
 }

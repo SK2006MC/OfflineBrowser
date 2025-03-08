@@ -1,7 +1,8 @@
 // AutoCompleteManager.java
 package com.sk.revisit.jsv2;
 
-import android.util.Log;
+
+import com.sk.revisit.Log;
 
 import org.json.JSONArray;
 

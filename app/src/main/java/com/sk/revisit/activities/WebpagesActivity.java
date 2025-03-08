@@ -1,8 +1,8 @@
 package com.sk.revisit.activities;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.sk.revisit.Log;
+import com.sk.revisit.R;
 import com.sk.revisit.adapter.WebpageItemAdapter;
 import com.sk.revisit.databinding.ActivityWebpagesBinding;
 import com.sk.revisit.managers.MySettingsManager;
@@ -20,7 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WebpagesActivity extends AppCompatActivity  {
+public class WebpagesActivity extends AppCompatActivity {
 
 	private static final String TAG = "WebpagesActivity";
 	private static final String HTML_EXTENSION = ".html";
@@ -52,10 +54,14 @@ public class WebpagesActivity extends AppCompatActivity  {
 		webpagesRefreshButton.setOnClickListener(v -> loadWebpages()); // Refresh on button click
 	}
 
+	@SuppressLint("ResourceAsColor")
 	public void launch(View view) {
 		TextView view2 = (TextView) view;
+		runOnUiThread(()->{
+			view2.setBackgroundColor(R.color.teal_700);
+		});
 		Intent intent = new Intent(this, MainActivity.class);
-		intent.putExtra("loadurl", true);
+		intent.putExtra("loadUrl", true);
 		intent.putExtra("url", view2.getText().toString());
 		startActivity(intent);
 		finish();

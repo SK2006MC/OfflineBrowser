@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:padding="5dp"
+	android:orientation="horizontal">
+
+	<TextView
+		android:paddingEnd="3dp"
+		android:id="@+id/tag"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/item_log_tag" />
+
+	<TextView
+		android:paddingStart="3dp"
+		android:paddingEnd="5dp"
+		android:id="@+id/msg"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/item_log_msg" />
+
+	<ScrollView
+		android:paddingStart="3dp"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+
+		<TextView
+			android:id="@+id/exception"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/item_log_exception" />
+
+	</ScrollView>
+</LinearLayout>

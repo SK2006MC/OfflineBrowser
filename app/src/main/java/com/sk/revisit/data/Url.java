@@ -1,10 +1,9 @@
 package com.sk.revisit.data;
 
-import android.net.Uri;
-
 public class Url {
 	private final String url;
 	public long size;
+	public int progress = 0;
 	private boolean isDownloaded;
 	private boolean isSelected;
 	private boolean isUpdateAvailable;
@@ -15,10 +14,6 @@ public class Url {
 
 	public String getUrl() {
 		return this.url;
-	}
-
-	public Uri getUri() {
-		return Uri.parse(this.url);
 	}
 
 	public boolean isDownloaded() {
@@ -51,5 +46,13 @@ public class Url {
 
 	public void setSize(int size) {
 		this.size = size;
+	}
+
+	public void setProgressListener(progressListener listener) {
+
+	}
+
+	public interface progressListener {
+		void onProgressChanged(int p);
 	}
 }
