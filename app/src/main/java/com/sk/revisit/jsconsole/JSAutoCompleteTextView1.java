@@ -16,7 +16,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.widget.AppCompatAutoCompleteTextView;
 
-import com.sk.revisit.Log;
+import com.sk.revisit.log.Log;
 
 import org.json.JSONArray;
 
@@ -30,7 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class JSAutoCompleteTextView extends AppCompatAutoCompleteTextView {
+public class JSAutoCompleteTextView1 extends AppCompatAutoCompleteTextView {
 	private static final String TAG = "JSAutoCompleteTextView";
 	private static final long DEBOUNCE_DELAY = 300;
 	private static final int MAX_CACHE_SIZE = 50; // Number of suggestion lists to cache
@@ -39,25 +39,20 @@ public class JSAutoCompleteTextView extends AppCompatAutoCompleteTextView {
 					"try", "catch", "finally", "switch", "case", "break", "default", "new",
 					"this", "typeof", "instanceof", "delete", "void", "debugger"));
 	private final Handler handler = new Handler(Looper.getMainLooper());
-	public ArrayAdapter<String> adapter;
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(); // For JS execution
+	private final LruCache<String, List<String>> suggestionCache = new LruCache<>(MAX_CACHE_SIZE);
+	public ArrayAdapter<String> adapter;
 	private WebView webView;
 	private Future<?> currentTask; // To cancel pending tasks
-	private final LruCache<String, List<String>> suggestionCache = new LruCache<>(MAX_CACHE_SIZE);
 	private String userInput = "";
 
-	public JSAutoCompleteTextView(Context context) {
+	public JSAutoCompleteTextView1(Context context) {
 		super(context);
 		init();
 	}
 
-	public JSAutoCompleteTextView(Context context, AttributeSet attrs) {
+	public JSAutoCompleteTextView1(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		init();
-	}
-
-	public JSAutoCompleteTextView(Context context, AttributeSet attrs, int defStyleAttr) {
-		super(context, attrs, int defStyleAttr);
 		init();
 	}
 
@@ -210,11 +205,11 @@ public class JSAutoCompleteTextView extends AppCompatAutoCompleteTextView {
 
 			//TODO parse the userInput js code get the obj the user currently interacting eg:"document. " or "window. " give suggestions for the obj also handle cases like "if(document. " for (document." only get the current object the user interacting
 			String obj = getCurrentObj(input);
-			if(obj == null){
+			if (obj == null) {
 				updateAdapter(new ArrayList<>());
 				return;
 			}
-			String jsCode = "(function() { try { return Object.getOwnPropertyNames("+obj+"); } catch (e) { return []; } })();";
+			String jsCode = "(function() { try { return Object.getOwnPropertyNames(" + obj + "); } catch (e) { return []; } })();";
 
 			executeJavaScript(jsCode, result -> {
 				List<String> suggestions = getSuggestions(result);

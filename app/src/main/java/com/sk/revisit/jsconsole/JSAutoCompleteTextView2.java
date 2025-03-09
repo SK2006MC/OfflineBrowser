@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.widget.AppCompatAutoCompleteTextView;
 
-import com.sk.revisit.Log;
+import com.sk.revisit.log.Log;
 
 import org.json.JSONArray;
 
@@ -29,7 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class JSAutoCompleteTextView extends AppCompatAutoCompleteTextView {
+public class JSAutoCompleteTextView2 extends AppCompatAutoCompleteTextView {
 
 	private static final String TAG = "JSAutoCompleteTextView";
 	private static final long DEBOUNCE_DELAY = 300;
@@ -46,15 +46,15 @@ public class JSAutoCompleteTextView extends AppCompatAutoCompleteTextView {
 	private WebView webView;
 	private String userInput = "";
 
-	public JSAutoCompleteTextView(Context context) {
+	public JSAutoCompleteTextView2(Context context) {
 		this(context, null);
 	}
 
-	public JSAutoCompleteTextView(Context context, AttributeSet attrs) {
+	public JSAutoCompleteTextView2(Context context, AttributeSet attrs) {
 		this(context, attrs, androidx.appcompat.R.attr.autoCompleteTextViewStyle);
 	}
 
-	public JSAutoCompleteTextView(Context context, AttributeSet attrs, int defStyleAttr) {
+	public JSAutoCompleteTextView2(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
 		adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
 		setAdapter(adapter);

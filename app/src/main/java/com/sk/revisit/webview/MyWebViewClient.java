@@ -1,5 +1,7 @@
 package com.sk.revisit.webview;
 
+import android.annotation.SuppressLint;
+import android.net.Uri;
 import android.net.http.SslError;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
@@ -23,9 +25,10 @@ public class MyWebViewClient extends WebViewClient {
 	}
 
 	@Override
-	public boolean shouldOverrideUrlLoading(WebView view, String url) {
+	public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+		Uri url = request.getUrl();
 		if (listener != null) {
-			listener.load(url);
+			listener.load(url.toString());
 		}
 		return true;
 	}
@@ -34,6 +37,7 @@ public class MyWebViewClient extends WebViewClient {
 		this.listener = listener;
 	}
 
+	@SuppressLint("WebViewClientOnReceivedSslError")
 	@Override
 	public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
 		handler.proceed();

@@ -7,8 +7,8 @@ public class MySettingsManager {
 	private static final String PREF_NAME = "RevisitSettings";
 	private static final String KEY_ROOT_PATH = "root_path";
 	private static final String KEY_DN_PATH = "dn_path";
-	private static final String KEY_IS_FIRST = "isfirst";
-	private static final String reqFileName = "req.txt";
+	private static final String KEY_IS_FIRST = "is_first";
+	private static String reqFileName = "req.txt";
 
 	private final SharedPreferences prefs;
 
@@ -19,15 +19,15 @@ public class MySettingsManager {
 	public String getRootStoragePath() {
 		return prefs.getString(KEY_ROOT_PATH, null);
 	}
-	
-	public String getDownloadStoragePath(){
-		return prefs.getString(KEY_DN_PATH, null);
-	}
 
 	public void setRootStoragePath(String path) {
 		prefs.edit().putString(KEY_ROOT_PATH, path).apply();
 	}
-	
+
+	public String getDownloadStoragePath() {
+		return prefs.getString(KEY_DN_PATH, null);
+	}
+
 	public void setDownloadStoragePath(String path) {
 		prefs.edit().putString(KEY_ROOT_PATH, path).apply();
 	}
@@ -45,6 +45,6 @@ public class MySettingsManager {
 	}
 
 	public void setReqFileName(String reqFileName) {
-		this.reqFileName = reqFileName;
+		MySettingsManager.reqFileName = reqFileName;
 	}
 }

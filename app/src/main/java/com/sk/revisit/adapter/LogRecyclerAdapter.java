@@ -1,20 +1,21 @@
 package com.sk.revisit.adapter;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.sk.revisit.R;
-import com.sk.revisit.databinding.ItemLogBinding;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LogRecyclerAdapter extends RecyclerView.Adapter<LogRecyclerAdapter.LogViewHolder> {
 
-	List<String[]> logs;
+	private List<String[]> logs;
+
 	public LogRecyclerAdapter(List<String[]> logs) {
 		this.logs = logs;
 	}
@@ -22,8 +23,14 @@ public class LogRecyclerAdapter extends RecyclerView.Adapter<LogRecyclerAdapter.
 	@NonNull
 	@Override
 	public LogViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-		ItemLogBinding binding = ItemLogBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-		return new LogViewHolder(binding);
+		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_log, parent, false);
+		return new LogViewHolder(view);
+	}
+
+	@Override
+	public void onBindViewHolder(@NonNull LogViewHolder holder, int position) {
+		String[] log = logs.get(position);
+		holder.bind(log);
 	}
 
 	@Override
@@ -31,26 +38,32 @@ public class LogRecyclerAdapter extends RecyclerView.Adapter<LogRecyclerAdapter.
 		return logs.size();
 	}
 
-	@Override
-	public void onBindViewHolder(@NonNull LogViewHolder holder, int position) {
-		holder.bind(logs.get(position));
+	public void setLogs(List<String[]> logs) {
+		this.logs = logs;
 	}
 
-	public static class LogViewHolder extends RecyclerView.ViewHolder {
-		private final ItemLogBinding binding;
+	static class LogViewHolder extends RecyclerView.ViewHolder {
 
-		public LogViewHolder(@NonNull ItemLogBinding binding) {
-			super(binding.getRoot());
-			this.binding = binding;
+		private final TextView logTagTextView;
+		private final TextView logMessageTextView;
+		private final TextView logExceptionTextView;
+
+		LogViewHolder(@NonNull View itemView) {
+			super(itemView);
+			logTagTextView = itemView.findViewById(R.id.log_tag_text_view);
+			logMessageTextView = itemView.findViewById(R.id.log_message_text_view);
+			logExceptionTextView = itemView.findViewById(R.id.log_exception_text_view);
 		}
 
-		public void bind(String[] log) {
-			binding.tag.setText(log[0]);
-			binding.msg.setText(log[1]);
-			try {
-				binding.exception.setText(log[2]);
-			} catch (Exception e) {
-				binding.exception.setText(R.string.no_exception_given);
+		void bind(String[] log) {
+			logTagTextView.setText(log[0]);
+			logMessageTextView.setText(log[1]);
+
+			if (log.length > 2 && log[2] != null && !log[2].isEmpty()) {
+				logExceptionTextView.setText(log[2]);
+				logExceptionTextView.setVisibility(View.VISIBLE);
+			} else {
+				logExceptionTextView.setVisibility(View.GONE);
 			}
 		}
 	}

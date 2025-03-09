@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.webkit.URLUtil;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,6 +16,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 import okhttp3.Headers;
 
@@ -54,7 +59,10 @@ public class WebStorageManager {
 		}
 
 		File localFile = new File(localPath);
-		if (localFile.exists()) {
+		boolean fileExists = localFile.exists();
+		utils.log(TAG,localPath+",exists="+fileExists);
+
+		if (fileExists) {
 			if (MyUtils.shouldUpdate && MyUtils.isNetworkAvailable) {
 				utils.download(uri, createDownloadListener(uriStr, localPath));
 			}
@@ -75,7 +83,12 @@ public class WebStorageManager {
 			@Override
 			public void onSuccess(File file, Headers headers) {
 				MyUtils.resolved.incrementAndGet();
-				utils.saveResp(String.format("[\"%s\",\"%s\",%d,\"%s\"]", uriStr, localPath, file.length(), headers.toString()));
+				utils.saveResp(String.format(Locale.ENGLISH,"[\"%s\",\"%s\",%d,\"%s\"]", uriStr, localPath, file.length(), headers.toString()));
+			}
+
+			@Override
+			public void onProgress(double p) {
+
 			}
 
 			@Override
@@ -94,7 +107,9 @@ public class WebStorageManager {
 			String mimeType = getMimeType(localFilePath, uri);
 			MyUtils.resolved.incrementAndGet();
 			InputStream inputStream = new FileInputStream(localFile);
-			return new WebResourceResponse(mimeType, UTF_8, inputStream);
+			WebResourceResponse response = new WebResourceResponse(mimeType, UTF_8, inputStream);
+			response.setResponseHeaders(Collections.singletonMap("Access-Control-Allow-Origin","*"));
+			return response;
 		} catch (FileNotFoundException e) {
 			MyUtils.failed.incrementAndGet();
 			utils.log(TAG, "File not found: " + localFile.getAbsolutePath(), e);
@@ -110,6 +125,15 @@ public class WebStorageManager {
 			mimeType = utils.getMimeType(localFilePath);
 		}
 		return mimeType;
+	}
+
+	Map<String,String> getHeaders(String path,Uri uri){
+		Map<String,String> headers = new HashMap<>();
+		File file = new File(path+".head");
+		if(file.exists()){
+
+		}
+		return null;
 	}
 
 	@NonNull

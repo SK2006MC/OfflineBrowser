@@ -1,64 +1,63 @@
-```java
 package com.sk.revisit.webview;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
-import com.sk.revisit.jsact.JSBridge;
 
 public class MyWebView extends WebView {
 
-    private JSBridge jsBridge;
 
-    public MyWebView(Context context) {
-        super(context);
-        init(context);
-    }
+	public MyWebView(Context context) {
+		super(context);
+		init(context);
+	}
 
-    public MyWebView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context);
-    }
+	public MyWebView(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		init(context);
+	}
 
-    public MyWebView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context);
-    }
+	public MyWebView(Context context, AttributeSet attrs, int defStyleAttr) {
+		super(context, attrs, defStyleAttr);
+		init(context);
+	}
 
-    private void init(Context context) {
-        WebSettings webSettings = getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setAllowFileAccess(true);
-        webSettings.setAllowContentAccess(true);
-        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+	@SuppressLint("SetJavaScriptEnabled")
+	private void init(Context context) {
+		WebSettings webSettings = getSettings();
 
-        // Enable remote debugging
-        WebView.setWebContentsDebuggingEnabled(true);
-    }
+//		MyWebViewClient client = new MyWebViewClient(new WebStorageManager(myUtils));
+//		client.setUrlLoadListener(url -> runOnUiThread(() -> urlEditText.setText(url)));
 
+		setDownloadListener(new MyDownloadListener(context));
+//		setWebViewClient(client);
 
-    public void setJSBridge(JSBridge jsBridge) {
-        this.jsBridge = jsBridge;
-        if (jsBridge != null) {
-            addJavascriptInterface(jsBridge, "Revisit");
-        }
-    }
+		webSettings.setAllowContentAccess(true);
+		webSettings.setAllowFileAccess(true);
+		webSettings.setAllowUniversalAccessFromFileURLs(true);
+		webSettings.setDatabaseEnabled(true);
+		webSettings.setDomStorageEnabled(true);
+		webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+		webSettings.setJavaScriptEnabled(true);
+		// should remove this line in production
+		webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+		webSettings.setUseWideViewPort(true);
+		// webSettings.setUserAgentString(); // Consider setting a custom User-Agent if needed
 
-    public JSBridge getJSBridge() {
-        return jsBridge;
-    }
+		// Enable remote debugging
+//		setWebContentsDebuggingEnabled(true);
+	}
 
-    public void destroyWebView() {
-        clearHistory();
-        clearCache(true);
-        loadUrl("about:blank");
-        pauseTimers();
-        removeJavascriptInterface("Revisit");
-        removeAllViews();
-        destroy();
-    }
+	public void destroyWebView() {
+		clearHistory();
+		clearCache(true);
+		loadUrl("about:blank");
+		pauseTimers();
+		removeJavascriptInterface("Revisit");
+		removeAllViews();
+		destroy();
+	}
 }
-```

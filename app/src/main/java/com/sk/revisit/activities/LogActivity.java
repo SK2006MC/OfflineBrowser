@@ -1,49 +1,51 @@
 package com.sk.revisit.activities;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.widget.ListAdapter;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.sk.revisit.Log;
+import com.sk.revisit.log.Log;
 import com.sk.revisit.R;
 import com.sk.revisit.adapter.LogRecyclerAdapter;
 import com.sk.revisit.databinding.ActivityLogBinding;
 
+import java.util.List;
+
 public class LogActivity extends AppCompatActivity {
 
-	ActivityLogBinding binding;
-	LogRecyclerAdapter adapter;
-
+	private ActivityLogBinding binding;
+	private LogRecyclerAdapter adapter;
 
 	@Override
-	protected void onCreate(Bundle arg0) {
-		super.onCreate(arg0);
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 		binding = ActivityLogBinding.inflate(getLayoutInflater());
 		setContentView(binding.getRoot());
 
-		adapter = new LogRecyclerAdapter(Log.getLogs());
-		binding.logs.setLayoutManager(new LinearLayoutManager(this));
-
-		DividerItemDecoration decoration = new DividerItemDecoration(
-				binding.logs.getContext(),
-				LinearLayoutManager.VERTICAL
-		);
-
-		decoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider));
-
-		binding.logs.addItemDecoration(decoration);
-
-		binding.logs.setAdapter(adapter);
-
-		binding.refreshButton.setOnClickListener(v -> loadLogs());
+		setupRecyclerView();
+		binding.refreshButton.setOnClickListener(v -> refreshLogs());
 	}
 
-	private void loadLogs() {
+	private void setupRecyclerView() {
+		RecyclerView recyclerView = binding.logsRecyclerView;
+		recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+		DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, LinearLayoutManager.VERTICAL);
+		dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider));
+		recyclerView.addItemDecoration(dividerItemDecoration);
+
+		List<String[]> logs = Log.getLogs();
+		adapter = new LogRecyclerAdapter(logs);
+		recyclerView.setAdapter(adapter);
+	}
+
+	private void refreshLogs() {
+		List<String[]> newLogs = Log.getLogs();
+		adapter.setLogs(newLogs);
 		adapter.notifyDataSetChanged();
 	}
 }

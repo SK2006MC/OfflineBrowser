@@ -1,19 +1,17 @@
 package com.sk.revisit.activities;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.sk.revisit.Log;
-import com.sk.revisit.R;
+import com.sk.revisit.log.Log;
 import com.sk.revisit.adapter.WebpageItemAdapter;
 import com.sk.revisit.databinding.ActivityWebpagesBinding;
 import com.sk.revisit.managers.MySettingsManager;
@@ -21,17 +19,19 @@ import com.sk.revisit.managers.MySettingsManager;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class WebpagesActivity extends AppCompatActivity {
+public class WebpagesActivity extends AppCompatActivity  {
 
 	private static final String TAG = "WebpagesActivity";
 	private static final String HTML_EXTENSION = ".html";
-	ActivityWebpagesBinding binding;
-	RecyclerView recyclerView;
-	MySettingsManager settingsManager;
-	Button webpagesRefreshButton;
-	String ROOT_PATH;
+	private ActivityWebpagesBinding binding;
 	private WebpageItemAdapter pageItemAdapter;
+	private MySettingsManager settingsManager;
+	private String ROOT_PATH;
+	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private Handler mainHandler = new Handler(Looper.getMainLooper());
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,68 +41,56 @@ public class WebpagesActivity extends AppCompatActivity {
 
 		settingsManager = new MySettingsManager(this);
 		ROOT_PATH = settingsManager.getRootStoragePath();
-		webpagesRefreshButton = binding.webpagesRefreshButton;
-		recyclerView = binding.webpagesHosts;
-		recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-		// Initialize adapter with empty list
-		pageItemAdapter = new WebpageItemAdapter(new ArrayList<>());
-		recyclerView.setAdapter(pageItemAdapter);
+		setupRecyclerView();
+		setupRefreshButton();
 
 		loadWebpages(); // Initial load
-
-		webpagesRefreshButton.setOnClickListener(v -> loadWebpages()); // Refresh on button click
 	}
 
-	@SuppressLint("ResourceAsColor")
-	public void launch(View view) {
-		TextView view2 = (TextView) view;
-		runOnUiThread(()->{
-			view2.setBackgroundColor(R.color.teal_700);
-		});
-		Intent intent = new Intent(this, MainActivity.class);
-		intent.putExtra("loadUrl", true);
-		intent.putExtra("url", view2.getText().toString());
-		startActivity(intent);
-		finish();
-		// Toast.makeText(this,"launch working",Toast.LENGTH_SHORT).show();
+	private void setupRecyclerView() {
+		binding.webpagesHosts.setLayoutManager(new LinearLayoutManager(this));
+		pageItemAdapter = new WebpageItemAdapter(new ArrayList<>());
+		binding.webpagesHosts.setAdapter(pageItemAdapter);
 	}
 
+	private void setupRefreshButton() {
+		binding.webpagesRefreshButton.setOnClickListener(v -> loadWebpages());
+	}
 
 	private void loadWebpages() {
 		Log.d(TAG, "Loading webpages...");
 		pageItemAdapter.setWebpageItems(new ArrayList<>()); // Clear the previous items
 
 		if (ROOT_PATH == null || ROOT_PATH.isEmpty()) {
-			Log.e(TAG, "Root path is null or empty. Cannot search for files.");
-			Toast.makeText(this, "Error: Invalid storage path.", Toast.LENGTH_SHORT).show();
+			showError("Error: Invalid storage path.");
 			return;
 		}
 
 		File rootDir = new File(ROOT_PATH);
 		if (!rootDir.exists() || !rootDir.isDirectory()) {
-			Log.e(TAG, "Invalid root directory: " + ROOT_PATH);
-			Toast.makeText(this, "Error: Invalid storage directory.", Toast.LENGTH_SHORT).show();
+			showError("Error: Invalid storage directory.");
 			return;
 		}
 
-		List<String> htmlFilesPaths = new ArrayList<>();
-		searchRecursive(rootDir, HTML_EXTENSION, htmlFilesPaths);
+		executor.execute(() -> {
+			List<String> htmlFilesPaths = new ArrayList<>();
+			searchRecursive(rootDir, HTML_EXTENSION, htmlFilesPaths);
 
-		if (htmlFilesPaths.isEmpty()) {
-			// Log.d(TAG, "No HTML files found.");
-			Toast.makeText(this, "No HTML files found.", Toast.LENGTH_SHORT).show();
-			return;
-		}
-
-		pageItemAdapter.setWebpageItems(htmlFilesPaths);
-		// Log.d(TAG, "Loaded Items: " + htmlFilesPaths.toString());
+			mainHandler.post(() -> {
+				if (htmlFilesPaths.isEmpty()) {
+					Toast.makeText(this, "No HTML files found.", Toast.LENGTH_SHORT).show();
+				}
+				pageItemAdapter.setWebpageItems(htmlFilesPaths);
+				Log.d(TAG, "Loaded Items: " + htmlFilesPaths.toString());
+			});
+		});
 	}
 
 	private void searchRecursive(File dir, String extension, List<String> files) {
 		File[] fileList = dir.listFiles();
 		if (fileList == null) {
-			return; // Nothing to do
+			return;
 		}
 		for (File file : fileList) {
 			if (file.isDirectory()) {
@@ -111,5 +99,31 @@ public class WebpagesActivity extends AppCompatActivity {
 				files.add(file.getAbsolutePath().replace(ROOT_PATH + File.separator, ""));
 			}
 		}
+	}
+
+	private void showError(String message) {
+		Log.e(TAG, message);
+		Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		executor.shutdownNow(); // Shutdown the executor
+	}
+
+	public void loadPage(View v) {
+		TextView textView = (TextView) v;
+		String filename = textView.getText().toString();
+		Intent intent = new Intent(this, MainActivity.class);
+		intent.putExtra("loadUrl", true);
+		intent.putExtra("url", filename);
+		startActivity(intent);
+		alert("loading...."+filename);
+//		finish();
+	}
+
+	private void alert(String msg) {
+		Toast.makeText(this,msg,Toast.LENGTH_SHORT).show();
 	}
 }

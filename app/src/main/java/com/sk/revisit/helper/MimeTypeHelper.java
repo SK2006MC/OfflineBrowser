@@ -1,6 +1,9 @@
-package com.sk.revisit;
+package com.sk.revisit.helper;
 
 import android.net.Uri;
+
+import com.sk.revisit.MyUtils;
+import com.sk.revisit.log.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -98,8 +101,8 @@ public class MimeTypeHelper {
 				file.createNewFile();
 			}
 			BufferedWriter writer = new BufferedWriter(new FileWriter(filepath));
-			if(mimeType.contains(";")){
-				mimeType=mimeType.split(";")[0];
+			if (mimeType.contains(";")) {
+				mimeType = mimeType.split(";")[0];
 			}
 			writer.write(mimeType);
 			writer.close();

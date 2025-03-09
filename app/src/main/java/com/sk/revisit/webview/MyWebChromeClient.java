@@ -4,7 +4,7 @@ import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
-import com.sk.revisit.jsact.JSConsoleLogger;
+import com.sk.revisit.jsconsole.JSConsoleLogger;
 
 public class MyWebChromeClient extends WebChromeClient {
 

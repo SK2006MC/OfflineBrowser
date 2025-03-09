@@ -1,5 +1,5 @@
 // JSConsoleLogger.java
-package com.sk.revisit.jsact;
+package com.sk.revisit.jsconsole;
 
 import android.content.Context;
 import android.webkit.ConsoleMessage;

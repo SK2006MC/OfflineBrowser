@@ -1,4 +1,4 @@
-package com.sk.revisit;
+package com.sk.revisit.helper;
 
 import android.util.Base64;
 
@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-class LoggerHelper {
+public class LoggerHelper {
 	private final MyLogManager myLogManager;
 	private final MyLogManager req;
 	private final MyLogManager resp;

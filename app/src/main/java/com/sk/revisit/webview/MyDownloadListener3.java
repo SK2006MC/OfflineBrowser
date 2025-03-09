@@ -3,7 +3,6 @@ package com.sk.revisit.webview;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -18,16 +17,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.sk.revisit.Log;
+import com.sk.revisit.log.Log;
 import com.sk.revisit.managers.MySettingsManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 import okhttp3.Call;
@@ -36,7 +32,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class MyDownloadListener implements DownloadListener {
+public class MyDownloadListener3 implements DownloadListener {
 
 	private static final int STORAGE_PERMISSION_REQUEST_CODE = 101;
 	private final String TAG = this.getClass().getSimpleName();
@@ -45,9 +41,9 @@ public class MyDownloadListener implements DownloadListener {
 	private final MySettingsManager settingsManager;
 	private final PermissionHandler permissionHandler;
 	private final UserInterfaceHandler uiHandler;
-	private ActivityResultLauncher<Intent> folderPickerLauncher;
+	private final ActivityResultLauncher<Intent> folderPickerLauncher;
 
-	public MyDownloadListener(Context context, ActivityResultLauncher<Intent> folderPickerLauncher) {
+	public MyDownloadListener3(Context context, ActivityResultLauncher<Intent> folderPickerLauncher) {
 		this.context = context;
 		this.settingsManager = new MySettingsManager(context);
 		this.permissionHandler = new PermissionHandler(context);
@@ -68,14 +64,14 @@ public class MyDownloadListener implements DownloadListener {
 	}
 
 	private void downloadFile(String url, String filename, String mimetype) {
-		File downloadDir = settingsManager.getDownloadStoragePath();
+		String downloadDir = settingsManager.getDownloadStoragePath();
 
 		if (downloadDir == null) {
 			uiHandler.askUserForDownloadLocation(settingsManager);
 			return;
 		}
 
-		if (!FileUtils.createDirectory(downloadDir)) {
+		if (!FileUtils.createDirectory(new File(downloadDir))) {
 			uiHandler.showToast("Failed to create directory");
 			uiHandler.askUserForDownloadLocation(settingsManager);
 			return;
@@ -112,6 +108,16 @@ public class MyDownloadListener implements DownloadListener {
 	}
 
 	// --- Helper Classes ---
+
+	public void handleDirectorySelection(Uri uri) {
+		if (uri != null) {
+			File directory = new File(Objects.requireNonNull(uri.getPath()));
+			settingsManager.setDownloadStoragePath(directory.getAbsolutePath());
+			uiHandler.showToast("Download location set successfully.");
+		} else {
+			uiHandler.showToast("Directory selection cancelled.");
+		}
+	}
 
 	private static class FileUtils {
 		static String getFilenameFromContentDisposition(String contentDisposition, String url) {
@@ -227,16 +233,6 @@ public class MyDownloadListener implements DownloadListener {
 		void pickFolder() {
 			Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
 			folderPickerLauncher.launch(intent);
-		}
-	}
-
-	public void handleDirectorySelection(Uri uri) {
-		if (uri != null) {
-			File directory = new File(Objects.requireNonNull(uri.getPath()));
-			settingsManager.setDownloadStoragePath(directory.getAbsolutePath());
-			uiHandler.showToast("Download location set successfully.");
-		} else {
-			uiHandler.showToast("Directory selection cancelled.");
 		}
 	}
 }

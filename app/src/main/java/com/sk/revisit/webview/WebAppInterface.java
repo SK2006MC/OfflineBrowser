@@ -21,8 +21,6 @@ public class WebAppInterface {
 
 	@JavascriptInterface
 	public void loadUrl(String url) {
-		webview.post(() -> {
-			webview.loadUrl(url);
-		});
+		webview.post(() -> webview.loadUrl(url));
 	}
 }

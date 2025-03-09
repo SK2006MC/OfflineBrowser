@@ -24,20 +24,27 @@ import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
-import com.sk.revisit.Log;
+import com.sk.revisit.jsconsole.JSAutoCompleteTextView;
+import com.sk.revisit.jsconsole.JSConsoleLogger;
+import com.sk.revisit.jsconsole.JSWebViewManager;
+import com.sk.revisit.log.Log;
 import com.sk.revisit.MyUtils;
 import com.sk.revisit.R;
 import com.sk.revisit.databinding.ActivityMainBinding;
 import com.sk.revisit.databinding.NavHeaderBinding;
 import com.sk.revisit.databinding.NavJsBinding;
-import com.sk.revisit.jsact.JSConsoleLogger;
-import com.sk.revisit.jsact.JSWebViewManager;
-import com.sk.revisit.jsv2.JSAutoCompleteTextView;
 import com.sk.revisit.managers.MySettingsManager;
 import com.sk.revisit.managers.WebStorageManager;
 import com.sk.revisit.webview.MyDownloadListener;
 import com.sk.revisit.webview.MyWebChromeClient;
 import com.sk.revisit.webview.MyWebViewClient;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -117,10 +124,28 @@ public class MainActivity extends AppCompatActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		myUtils.shutdown();
+
+		saveLog(Log.getLogs());
+
 		// Unregister network callback to prevent memory leaks
 		ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		if (networkCallback != null) {
 			connectivityManager.unregisterNetworkCallback(networkCallback);
+		}
+	}
+
+	void saveLog(List<String[]> logs){
+		try{
+			File logFile = new File(settingsManager.getRootStoragePath()+"/log2.txt");
+			BufferedWriter writer = new BufferedWriter(new FileWriter(logFile));
+			for(String[] log:logs){
+				writer.write(Arrays.toString(log));
+				writer.newLine();
+				writer.flush();
+			}
+			writer.close();
+		}catch (Exception e){
+			showAlert(e.toString());
 		}
 	}
 
@@ -130,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 		su = navHeaderBinding.su;
 		bg = navHeaderBinding.bg;
 		inf = navHeaderBinding.inf;
-		inf.setOnClickListener((v) -> inf.setText(String.format(fm, MyUtils.requests.get(), MyUtils.resolved.get(), MyUtils.failed.get())));
+		inf.setOnClickListener((v) -> inf.setText(String.format(Locale.ENGLISH,fm, MyUtils.requests.get(), MyUtils.resolved.get(), MyUtils.failed.get())));
 
 		mainWebView = binding.myWebView;
 
@@ -250,6 +275,7 @@ public class MainActivity extends AppCompatActivity {
 		WebSettings webSettings = webView.getSettings();
 		webSettings.setAllowContentAccess(true);
 		webSettings.setAllowFileAccess(true);
+		webSettings.setAllowFileAccessFromFileURLs(true);
 		webSettings.setAllowUniversalAccessFromFileURLs(true);
 		webSettings.setDatabaseEnabled(true);
 		webSettings.setDomStorageEnabled(true);
@@ -264,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public void onBackPressed() {
 		DrawerLayout drawerLayout = binding.drawerLayout;
-		NavigationView mainNav = binding.myNav,JSNav=binding.navJs;
+		NavigationView mainNav = binding.myNav, JSNav = binding.navJs;
 		try {
 			if (drawerLayout.isDrawerOpen(mainNav)) {
 				drawerLayout.closeDrawer(mainNav);

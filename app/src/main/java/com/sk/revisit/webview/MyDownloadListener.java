@@ -3,14 +3,12 @@ package com.sk.revisit.webview;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.webkit.DownloadListener;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
-//custom Log util has all functions same as android.util.Log
-import com.sk.revisit.Log;
+import com.sk.revisit.log.Log;
 import com.sk.revisit.managers.MySettingsManager;
 
 import java.io.File;
@@ -28,6 +26,7 @@ public class MyDownloadListener implements DownloadListener {
 	private final Context context;
 	private final OkHttpClient client = new OkHttpClient(); // Use OkHttp client
 	MySettingsManager sm;
+
 	public MyDownloadListener(Context context) {
 		this.context = context;
 		this.sm = new MySettingsManager(context);
@@ -58,7 +57,7 @@ public class MyDownloadListener implements DownloadListener {
 				assert response.body() != null;
 				InputStream inputStream = response.body().byteStream();
 
-				File downloadDir = sm.getDownloadStoragePath();//can return null or invalid paths
+				File downloadDir = new File(sm.getDownloadStoragePath());
 				if (!downloadDir.exists()) {
 					if (!downloadDir.mkdirs()) {
 						showToast("Failed to create directory");
@@ -78,13 +77,13 @@ public class MyDownloadListener implements DownloadListener {
 					outputStream.flush();
 					showToast("Download complete: " + filename); // Download complete
 				} catch (IOException e) {
-					Log.e(TAG,e.toString());
+					Log.e(TAG, e.toString());
 					showToast("Error writing file: " + e.getMessage());
 				} finally {
 					inputStream.close(); // Close input stream
 				}
 			} catch (IOException e) {
-				Log.e(TAG,e.toString());
+				Log.e(TAG, e.toString());
 				showToast("Download failed: " + e.getMessage()); // Network or server error
 			}
 		}).start();
@@ -99,7 +98,7 @@ public class MyDownloadListener implements DownloadListener {
 					filename = parts[1].replaceAll("\"", "").trim();
 				}
 			} catch (Exception e) {
-				Log.e(TAG,e.toString());
+				Log.e(TAG, e.toString());
 			}
 		}
 		if (filename == null || filename.isEmpty()) {

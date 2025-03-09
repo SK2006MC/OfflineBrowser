@@ -1,8 +1,6 @@
 package com.sk.revisit.adapter;
 
-import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -17,14 +15,13 @@ import java.util.Objects;
 
 public class WebpageItemAdapter extends RecyclerView.Adapter<WebpageItemAdapter.WebpageItemViewHolder> {
 
-	public List<String> webpageFileNames; // Renamed for clarity
+	private List<String> webpageFileNames;
 
 	public WebpageItemAdapter(List<String> webpageFileNames) {
 		this.webpageFileNames = webpageFileNames;
 	}
 
 	public void setWebpageItems(List<String> newWebpageFileNames) {
-		// Check if the new list is the same as the old list to avoid unnecessary updates
 		if (!Objects.equals(this.webpageFileNames, newWebpageFileNames)) {
 			this.webpageFileNames = newWebpageFileNames;
 			notifyDataSetChanged();
@@ -49,7 +46,7 @@ public class WebpageItemAdapter extends RecyclerView.Adapter<WebpageItemAdapter.
 		return webpageFileNames.size();
 	}
 
-	public static class WebpageItemViewHolder extends RecyclerView.ViewHolder {
+	public class WebpageItemViewHolder extends RecyclerView.ViewHolder {
 		TextView fileNameTextView;
 
 		public WebpageItemViewHolder(@NonNull View itemView) {

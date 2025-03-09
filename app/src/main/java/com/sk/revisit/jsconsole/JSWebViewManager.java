@@ -1,4 +1,4 @@
-package com.sk.revisit.jsact;
+package com.sk.revisit.jsconsole;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -28,7 +28,6 @@ public class JSWebViewManager {
 	private void setupWebView() {
 		MyWebChromeClient chromeClient = new MyWebChromeClient(jsLogger, null);
 		webView.setWebChromeClient(chromeClient);
-
 		webView.addJavascriptInterface(webAppInterface, "Revisit");
 		webView.loadUrl("file:///android_asset/index.html");
 	}

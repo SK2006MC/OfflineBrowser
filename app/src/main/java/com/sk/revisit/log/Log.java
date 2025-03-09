@@ -1,4 +1,4 @@
-package com.sk.revisit;
+package com.sk.revisit.log;
 
 import java.util.ArrayList;
 import java.util.List;

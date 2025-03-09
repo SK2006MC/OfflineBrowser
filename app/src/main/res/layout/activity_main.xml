@@ -33,10 +33,11 @@
 
 	<com.google.android.material.navigation.NavigationView
 		android:id="@+id/nav_js"
-		android:layout_width="240dp"
-		android:layout_height="match_parent"
 		android:layout_gravity="end"
-		app:headerLayout="@layout/nav_js" />
+		android:orientation="vertical"
+		app:headerLayout="@layout/nav_js"
+		android:layout_height="match_parent"
+		android:layout_width="240dp"/>
 
 
 </androidx.drawerlayout.widget.DrawerLayout>

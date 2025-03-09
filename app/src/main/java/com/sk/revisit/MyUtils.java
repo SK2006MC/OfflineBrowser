@@ -8,6 +8,9 @@ import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 
+import com.sk.revisit.helper.LoggerHelper;
+import com.sk.revisit.helper.MimeTypeHelper;
+import com.sk.revisit.log.Log;
 import com.sk.revisit.managers.SQLiteDBM;
 
 import java.io.BufferedInputStream;
@@ -103,7 +106,12 @@ public class MyUtils {
 			return localPath.endsWith("/") ? localPath + INDEX_HTML : localPath + File.separator + INDEX_HTML;
 		}
 
-		log(uri.toString(), localPath + ",query=" + query);
+//		log(uri.toString(), localPath + ",query=" + query);
+		if(query!=null){
+			localPath = localPath +':'+query;
+		}
+		log(TAG+" the uri="+uri, " localpath="+localPath);
+
 		return localPath;
 	}
 
@@ -136,6 +144,11 @@ public class MyUtils {
 				return;
 			}
 
+			File file = new File(localFilePath);
+			if(file.exists()&&!MyUtils.shouldUpdate){
+				return;
+			}
+
 			Request request = new Request.Builder().url(uri.toString()).build();
 
 			client.newCall(request).enqueue(new Callback() {
@@ -153,12 +166,17 @@ public class MyUtils {
 						return;
 					}
 					File outfile = prepareFile(localFilePath);
+					long contentLength = response.body().contentLength();
+					if (contentLength==0){
+						contentLength=1;
+					}
 					try (InputStream in = new BufferedInputStream(response.body().byteStream());
 						 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile))) {
 						byte[] buffer = new byte[8192];
-						int bytesRead;
+						long bytesRead;
 						while ((bytesRead = in.read(buffer)) != -1) {
-							out.write(buffer, 0, bytesRead);
+							out.write(buffer, 0, (int) bytesRead);
+							listener.onProgress((double) bytesRead /contentLength);
 						}
 						out.flush();
 
@@ -181,7 +199,7 @@ public class MyUtils {
 		});
 	}
 
-	public File prepareFile(String filepath){
+	public File prepareFile(String filepath) {
 		try {
 			File file = new File(filepath);
 			File parentDir = file.getParentFile();
@@ -192,8 +210,8 @@ public class MyUtils {
 				file.createNewFile();
 			}
 			return file;
-		}catch(Exception e){
-			Log.e(TAG,e.toString());
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
 			return null;
 		}
 	}
@@ -211,7 +229,7 @@ public class MyUtils {
 	 */
 	public interface DownloadListener {
 		void onSuccess(File file, Headers headers);
-
+		void onProgress(double p);
 		void onFailure(Exception e);
 	}
 
