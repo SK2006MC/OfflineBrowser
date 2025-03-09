@@ -39,7 +39,7 @@ public class WebStorageManager {
 		MyUtils.requests.incrementAndGet();
 
 		if (!GET_METHOD.equals(request.getMethod())) {
-			utils.log(TAG, "Request method is not GET: " + request.getMethod());
+			//utils.log(TAG, "Request method is not GET: " + request.getMethod());
 			return null;
 		}
 
@@ -48,7 +48,7 @@ public class WebStorageManager {
 		utils.saveUrl(uriStr);
 
 		if (!URLUtil.isNetworkUrl(uriStr)) {
-			utils.log(TAG, "Not a network URL: " + uriStr);
+			//utils.log(TAG, "Not a network URL: " + uriStr);
 			return null;
 		}
 
@@ -60,7 +60,7 @@ public class WebStorageManager {
 
 		File localFile = new File(localPath);
 		boolean fileExists = localFile.exists();
-		utils.log(TAG,localPath+",exists="+fileExists);
+		//utils.log(TAG,localPath+",exists="+fileExists);
 
 		if (fileExists) {
 			if (MyUtils.shouldUpdate && MyUtils.isNetworkAvailable) {
@@ -80,6 +80,13 @@ public class WebStorageManager {
 	@NonNull
 	private MyUtils.DownloadListener createDownloadListener(String uriStr, String localPath) {
 		return new MyUtils.DownloadListener() {
+			//urlLog
+			@Override
+			public void onStart(Uri uri,double contentLength){
+				//ToDo create a item_url_log
+				//urlLog.text = uri.toString()
+			}
+			
 			@Override
 			public void onSuccess(File file, Headers headers) {
 				MyUtils.resolved.incrementAndGet();
@@ -88,7 +95,7 @@ public class WebStorageManager {
 
 			@Override
 			public void onProgress(double p) {
-
+				//urlLog.pb.setProgress(p)
 			}
 
 			@Override
@@ -96,6 +103,11 @@ public class WebStorageManager {
 				MyUtils.failed.incrementAndGet();
 				utils.saveReq(uriStr);
 				utils.log(TAG, "Download failed for: " + uriStr, e);
+			}
+			
+			@Override
+			public void onEnd(){
+				//urllog.pb.visible=gone
 			}
 		};
 	}
@@ -112,7 +124,7 @@ public class WebStorageManager {
 			return response;
 		} catch (FileNotFoundException e) {
 			MyUtils.failed.incrementAndGet();
-			utils.log(TAG, "File not found: " + localFile.getAbsolutePath(), e);
+			//utils.log(TAG, "File not found: " + localFile.getAbsolutePath(), e);
 			return null;
 		}
 	}
@@ -122,6 +134,9 @@ public class WebStorageManager {
 		String mimeType = utils.getMimeTypeFromMeta(localFilePath);
 		if (mimeType == null) {
 			utils.createMimeTypeMeta(uri);
+			if(localFilePath.contains(":")){
+					localFilePath = localFilePath.split(":")[0];
+			}
 			mimeType = utils.getMimeType(localFilePath);
 		}
 		return mimeType;
@@ -129,13 +144,17 @@ public class WebStorageManager {
 
 	Map<String,String> getHeaders(String path,Uri uri){
 		Map<String,String> headers = new HashMap<>();
-		File file = new File(path+".head");
+		path = path+".head";
+		File file = new File(path);
 		if(file.exists()){
-
+				headersb = parse(file);
+		}else{
+			//makes a head req for the uri saves it to the path
+			createHeadersFile(uri,path);
 		}
 		return null;
 	}
-
+	
 	@NonNull
 	private WebResourceResponse createNoOfflineFileResponse() {
 		return new WebResourceResponse("text/html", UTF_8, new ByteArrayInputStream(NO_OFFLINE_FILE_MESSAGE.getBytes()));

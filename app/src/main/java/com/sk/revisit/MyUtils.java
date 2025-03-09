@@ -110,7 +110,7 @@ public class MyUtils {
 		if(query!=null){
 			localPath = localPath +':'+query;
 		}
-		log(TAG+" the uri="+uri, " localpath="+localPath);
+		//log(TAG+" the uri="+uri, " localpath="+localPath);
 
 		return localPath;
 	}
@@ -122,7 +122,7 @@ public class MyUtils {
 	}
 
 	public void createMimeTypeMeta(Uri uri) {
-		mimeTypeHelper.createMimeTypeMeta(uri);
+		executorService.execute(()->mimeTypeHelper.createMimeTypeMeta(uri));
 	}
 
 	public String getMimeTypeFromMeta(String filepath) {
@@ -130,7 +130,7 @@ public class MyUtils {
 	}
 
 	public void createMimeTypeMetaFile(String filepath, String type) {
-		mimeTypeHelper.createMimeTypeMetaFile(filepath, type);
+		executorService.execute(()->mimeTypeHelper.createMimeTypeMetaFile(filepath, type));
 	}
 
 	/**
