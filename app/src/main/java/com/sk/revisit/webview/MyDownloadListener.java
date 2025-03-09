@@ -9,7 +9,9 @@ import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
+//custom Log util has all functions same as android.util.Log
 import com.sk.revisit.Log;
+import com.sk.revisit.managers.MySettingsManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,28 +22,27 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+//for a webview
 public class MyDownloadListener implements DownloadListener {
 	private final String TAG = this.getClass().getSimpleName();
 	private final Context context;
 	private final OkHttpClient client = new OkHttpClient(); // Use OkHttp client
-
+	MySettingsManager sm;
 	public MyDownloadListener(Context context) {
 		this.context = context;
+		this.sm = new MySettingsManager(context);
 	}
 
 	@Override
 	public void onDownloadStart(String url, String userAgent, String contentDisposition,
 								String mimetype, long contentLength) {
-		// 1. Check Permissions
 		if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 			Toast.makeText(context, "Storage permission is required to download files", Toast.LENGTH_SHORT).show();
-			// You might want to call a function to request permissions here
+			// TODO call a function to request permissions here
 			return;
 		}
 
-		// 2. Get Filename
 		String filename = getFilenameFromContentDisposition(contentDisposition, url);
-		// 3. Start Download (using OkHttp)
 		downloadFile(url, filename, mimetype);
 	}
 
@@ -54,22 +55,20 @@ public class MyDownloadListener implements DownloadListener {
 					throw new IOException("Unexpected code " + response);
 				}
 
-				// 4.  Get the input stream (file data)
 				assert response.body() != null;
 				InputStream inputStream = response.body().byteStream();
 
-				// 5.  Determine destination file
-				File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+				File downloadDir = sm.getDownloadStoragePath();//can return null or invalid paths
 				if (!downloadDir.exists()) {
 					if (!downloadDir.mkdirs()) {
 						showToast("Failed to create directory");
+						//TODO ask user for location then save in setings use sm.setDownloadStoragePath(path);
 						return;
 					}
 				}
 
 				File file = new File(downloadDir, filename);
 
-				// 6.  Write the file data
 				try (FileOutputStream outputStream = new FileOutputStream(file)) {
 					byte[] buffer = new byte[4096];
 					int bytesRead;
@@ -91,8 +90,6 @@ public class MyDownloadListener implements DownloadListener {
 		}).start();
 	}
 
-
-	//Helper functions (same as before)
 	private String getFilenameFromContentDisposition(String contentDisposition, String url) {
 		String filename = null;
 		if (contentDisposition != null) {
