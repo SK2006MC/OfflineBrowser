@@ -155,13 +155,15 @@ public class MyUtils {
 				@Override
 				public void onFailure(@NonNull Call call, @NonNull IOException e) {
 					log(TAG, "Download failed for URI: " + uri, e);
+					if(file.exists()) file.delete();
 					listener.onFailure(e);
 				}
-
+nl
 				@Override
 				public void onResponse(@NonNull Call call, @NonNull Response response) {
 					if (!response.isSuccessful() || response.body() == null) {
-						log(TAG, "Download failed. Response code: " + response.code() + " for URI: " + uri);
+						if(file.exists()) file.delete();
+						//log(TAG, "Download failed. Response code: " + response.code() + " for URI: " + uri);
 						listener.onFailure(new IOException("Download failed. Response code: " + response.code()));
 						return;
 					}
@@ -180,7 +182,7 @@ public class MyUtils {
 						}
 						out.flush();
 
-						log(TAG, "Downloaded: " + uri + " to " + localFilePath);
+						//log(TAG, "Downloaded: " + uri + " to " + localFilePath);
 						listener.onSuccess(new File(localFilePath), response.headers());
 
 						createMimeTypeMetaFile(localFilePath, response.body().contentType().toString());
@@ -190,8 +192,9 @@ public class MyUtils {
 								dbm.insertIntoUrlsIfNotExists(uri, localFilePath, new File(localFilePath).length(), response.headers())
 						);
 
-					} catch (IOException e) {
-						log(TAG, "Error writing to file: " + localFilePath, e);
+					} catch (Exception e) {
+						//log(TAG, "Error writing to file: " + localFilePath, e);
+						if(file.exists()) file.delete();
 						listener.onFailure(e);
 					}
 				}
@@ -228,9 +231,11 @@ public class MyUtils {
 	 * Listener interface for download events.
 	 */
 	public interface DownloadListener {
+		void onStart(Uri uri,long contentLength);
 		void onSuccess(File file, Headers headers);
 		void onProgress(double p);
 		void onFailure(Exception e);
+		void onEnd();
 	}
 
 	private static class CustomThreadFactory implements ThreadFactory {
