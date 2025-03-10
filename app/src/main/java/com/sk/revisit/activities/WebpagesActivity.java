@@ -59,7 +59,7 @@ public class WebpagesActivity extends AppCompatActivity  {
 	}
 
 	private void loadWebpages() {
-		Log.d(TAG, "Loading webpages...");
+		//Log.d(TAG, "Loading webpages...");
 		pageItemAdapter.setWebpageItems(new ArrayList<>()); // Clear the previous items
 
 		if (ROOT_PATH == null || ROOT_PATH.isEmpty()) {
@@ -82,7 +82,7 @@ public class WebpagesActivity extends AppCompatActivity  {
 					Toast.makeText(this, "No HTML files found.", Toast.LENGTH_SHORT).show();
 				}
 				pageItemAdapter.setWebpageItems(htmlFilesPaths);
-				Log.d(TAG, "Loaded Items: " + htmlFilesPaths.toString());
+				//Log.d(TAG, "Loaded Items: " + htmlFilesPaths.toString());
 			});
 		});
 	}
