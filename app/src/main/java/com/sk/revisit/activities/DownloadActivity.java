@@ -29,8 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import okhttp3.Headers;
 
@@ -121,6 +119,11 @@ public class DownloadActivity extends AppCompatActivity {
 		for (Url url : selectedUrls) {
 			myUtils.download(Uri.parse(url.url), new MyUtils.DownloadListener() {
 				@Override
+				public void onStart(Uri uri, long contentLength) {
+
+				}
+
+				@Override
 				public void onSuccess(File file, Headers headers) {
 					url.isDownloaded=true;
 				}
@@ -131,6 +134,11 @@ public class DownloadActivity extends AppCompatActivity {
 				@Override
 				public void onFailure(Exception e) {
 					url.isDownloaded = false;
+				}
+
+				@Override
+				public void onEnd(File file) {
+
 				}
 			});
 		}
@@ -145,10 +153,7 @@ public class DownloadActivity extends AppCompatActivity {
 			});
 		}
 
-		long finalTotalSize = totalSize;
-		mainHandler.post(() -> {
-			binding.totalSizeTextview.setText("Total Size: " + finalTotalSize + " bytes");
-		});
+		mainHandler.post(() -> binding.totalSizeTextview.setText("Total Size: " + totalSize + " bytes"));
 	}
 
 	private void initUI() {
@@ -159,13 +164,9 @@ public class DownloadActivity extends AppCompatActivity {
 			initRecyclerView(); // Reload data from file and refresh RecyclerView
 		});
 
-		binding.calcButton.setOnClickListener(v -> {
-			calculateTotalSize();
-		});
+		binding.calcButton.setOnClickListener(v -> calculateTotalSize());
 
-		binding.downloadButton.setOnClickListener(v -> {
-			downloadSelectedUrls();
-		});
+		binding.downloadButton.setOnClickListener(v -> downloadSelectedUrls());
 	}
 
 	@Override

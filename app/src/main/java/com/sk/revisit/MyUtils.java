@@ -158,7 +158,7 @@ public class MyUtils {
 					if(file.exists()) file.delete();
 					listener.onFailure(e);
 				}
-nl
+
 				@Override
 				public void onResponse(@NonNull Call call, @NonNull Response response) {
 					if (!response.isSuccessful() || response.body() == null) {
@@ -235,7 +235,7 @@ nl
 		void onSuccess(File file, Headers headers);
 		void onProgress(double p);
 		void onFailure(Exception e);
-		void onEnd();
+		void onEnd(File file);
 	}
 
 	private static class CustomThreadFactory implements ThreadFactory {

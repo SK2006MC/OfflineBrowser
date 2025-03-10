@@ -4,7 +4,6 @@ import android.net.Uri;
 import android.webkit.URLUtil;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
-import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -82,7 +81,7 @@ public class WebStorageManager {
 		return new MyUtils.DownloadListener() {
 			//urlLog
 			@Override
-			public void onStart(Uri uri,double contentLength){
+			public void onStart(Uri uri,long contentLength){
 				//ToDo create a item_url_log
 				//urlLog.text = uri.toString()
 			}
@@ -106,7 +105,7 @@ public class WebStorageManager {
 			}
 			
 			@Override
-			public void onEnd(){
+			public void onEnd(File file){
 				//urllog.pb.visible=gone
 			}
 		};
@@ -146,12 +145,12 @@ public class WebStorageManager {
 		Map<String,String> headers = new HashMap<>();
 		path = path+".head";
 		File file = new File(path);
-		if(file.exists()){
-				headersb = parse(file);
-		}else{
-			//makes a head req for the uri saves it to the path
-			createHeadersFile(uri,path);
-		}
+//		if(file.exists()){
+//				headersb = parse(file);
+//		}else{
+//			//makes a head req for the uri saves it to the path
+//			createHeadersFile(uri,path);
+//		}
 		return null;
 	}
 	
