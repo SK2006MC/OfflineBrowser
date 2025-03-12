@@ -54,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
 	MySettingsManager settingsManager;
 	private EditText urlEditText;
 	private WebView mainWebView;
-	private ScrollView jsConsoleScrollView;
-	private LinearLayout jsConsoleLayout, bg;
+	private ScrollView jsConsoleScrollView,urlsLogSV;
+	private LinearLayout jsConsoleLayout, bg,urlsLogL;
 	private JSAutoCompleteTextView jsInputTextView;
 	private ImageButton executeJsButton;
 	@SuppressLint("UseSwitchCompatOrMaterialCode")
@@ -65,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
 	private MyUtils myUtils;
 	private ActivityMainBinding binding;
 	private ConnectivityManager.NetworkCallback networkCallback;
+	private UrlsLogAdapter urlsLogAdapter;
+	private List<UrlLog> urlsLog = new ArrayList<>();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -159,11 +161,15 @@ public class MainActivity extends AppCompatActivity {
 
 		mainWebView = binding.myWebView;
 
-		NavJsBinding binding1 = NavJsBinding.bind(binding.navJs.getHeaderView(0));
-		jsInputTextView = binding1.jsInput;
-		jsConsoleLayout = binding1.consoleLayout;
-		jsConsoleScrollView = binding1.consoleScrollView;
-		executeJsButton = binding1.executeJsBtn;
+		NavJsBinding jsHeaderView = NavJsBinding.bind(binding.navJs.getHeaderView(0));
+		jsInputTextView = jsHeaderView.jsInput;
+		jsConsoleLayout = jsHeaderView.consoleLayout;
+		jsConsoleScrollView = jsHeaderView.consoleScrollView;
+		executeJsButton = jsHeaderView.executeJsBtn;
+		urlsLogsSV = jsHeaderView.urlsLogScrollView;
+		urlsLogL = jsHeaderView.urlsLogLayout;
+		
+		urlsLogL.setAdapter();
 	}
 
 	private void initNetworkChangeListener() {

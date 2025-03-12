@@ -48,6 +48,7 @@ public class MyUtils {
 	private final ExecutorService executorService;
 	private final LoggerHelper logger;
 	public MimeTypeHelper mimeTypeHelper;
+	OnCreateLogListener onCreateLogListener;
 
 	public MyUtils(Context context, String rootPath) {
 		this.rootPath = rootPath;
@@ -80,6 +81,19 @@ public class MyUtils {
 
 	public void saveResp(String m) {
 		logger.saveResp(m);
+	}
+	
+	public void createUrlLog(){
+		if(onCreateLogListener==null) return;
+		onCreateLogListener.onCreate()
+	}
+	
+	public void setOnCreateLogListener(@NonNull OnCreateLogListener onCreateLogListener){
+		this.onCreateLogListener = onCreateLogListener;
+	}
+	
+	public void OnCreateLogListener{
+		void onCreate();
 	}
 
 	/**
