@@ -31,13 +31,8 @@
 		app:headerLayout="@layout/nav_header"
 		app:menu="@menu/nav_menu" />
 
-	<com.google.android.material.navigation.NavigationView
-		android:id="@+id/nav_js"
-		android:layout_gravity="end"
-		android:orientation="vertical"
-		app:headerLayout="@layout/nav_js"
-		android:layout_height="match_parent"
-		android:layout_width="240dp"/>
-
+	<include
+		android:id="@+id/jsnav"
+		layout="@layout/nav_js" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

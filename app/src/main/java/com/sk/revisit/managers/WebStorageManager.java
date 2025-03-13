@@ -89,7 +89,7 @@ public class WebStorageManager {
 			@Override
 			public void onSuccess(File file, Headers headers) {
 				MyUtils.resolved.incrementAndGet();
-				utils.saveResp(String.format(Locale.ENGLISH,"[\"%s\",\"%s\",%d,\"%s\"]", uriStr, localPath, file.length(), headers.toString()));
+//				utils.saveResp(String.format(Locale.ENGLISH,"[\"%s\",\"%s\",%d,\"%s\"]", uriStr, localPath, file.length(), headers.toString()));
 			}
 
 			@Override
@@ -101,7 +101,7 @@ public class WebStorageManager {
 			public void onFailure(Exception e) {
 				MyUtils.failed.incrementAndGet();
 				utils.saveReq(uriStr);
-				utils.log(TAG, "Download failed for: " + uriStr, e);
+//				utils.log(TAG, "Download failed for: " + uriStr, e);
 			}
 			
 			@Override

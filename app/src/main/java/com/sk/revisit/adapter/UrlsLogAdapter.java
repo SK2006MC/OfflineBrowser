@@ -1,30 +1,54 @@
 package com.sk.revisit.adapter;
 
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
 
-import com.androidx.recyclerView;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
-public class UrlsLogAdapter extends RecyclerView.Adapter<UrlViewHolder> {
-    
-    public UrlsLogAdapter(){
-    }
+import com.sk.revisit.data.UrlLog;
+import com.sk.revisit.databinding.ItemUrllogBinding;
 
-    @Override
-    public void  
+import java.util.List;
 
-    public static class UrlViewHolder extends RecyclerView.ViewHolder {
-        ItemUrlLogBinding binding;
+public class UrlsLogAdapter extends RecyclerView.Adapter<UrlsLogAdapter.UrlViewHolder> {
 
-        UrlViewHolder(ItemUrlLogBinding binding){
-            this.binding = binding;
-        }
+	List<UrlLog> urlLogs;
+	public UrlsLogAdapter() {
+	}
 
-        public void bind(UrlLog urlLog){
-            binding.urlText.setText(urlLog.url);
-            binding.size.setText(urlLog.size);
-            urlLog.setOnProgressChangeListener((p)->{
-                binding.progress.setProgress((int)p);
-            });
-        }
-    }
+	@NonNull
+	@Override
+	public UrlViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+		ItemUrllogBinding binding = ItemUrllogBinding.inflate(LayoutInflater.from(parent.getContext()));
+		return new UrlViewHolder(binding);
+	}
+
+	@Override
+	public void onBindViewHolder(@NonNull UrlViewHolder holder, int position) {
+		holder.bind(urlLogs.get(position));
+	}
+
+	@Override
+	public int getItemCount() {
+		return urlLogs.size();
+	}
+
+	public static class UrlViewHolder extends RecyclerView.ViewHolder {
+		ItemUrllogBinding binding;
+
+		UrlViewHolder(ItemUrllogBinding binding) {
+			super(binding.getRoot());
+			this.binding = binding;
+		}
+
+		public void bind(UrlLog urlLog) {
+			binding.urlText.setText(urlLog.url);
+			binding.size.setText((int) urlLog.size);
+			urlLog.setOnProgressChangeListener((p) -> {
+				binding.progress.setProgress((int) p);
+			});
+		}
+	}
 }
 

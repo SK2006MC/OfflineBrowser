@@ -1,12 +1,12 @@
 package com.sk.revisit.activities;
 
-import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -29,8 +29,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.Headers;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class DownloadActivity extends AppCompatActivity {
 
@@ -53,17 +58,13 @@ public class DownloadActivity extends AppCompatActivity {
 		myUtils = new MyUtils(this, settingsManager.getRootStoragePath());
 
 		loadUrisFromFile();
-		initRecyclerView();
 		initUI();
 	}
 
+	public void refresh(){
+		urlAdapter.notifyDataSetChanged();
+	}
 	private void initRecyclerView() {
-		urlList.clear();
-		for (String urlStr : urlsStr) {
-			urlList.add(new Url(urlStr));
-		}
-
-		urlAdapter = new UrlAdapter(urlList);
 		binding.urlsRecyclerview.setAdapter(urlAdapter);
 		binding.urlsRecyclerview.setLayoutManager(new LinearLayoutManager(this));
 
@@ -71,17 +72,14 @@ public class DownloadActivity extends AppCompatActivity {
 				binding.urlsRecyclerview.getContext(),
 				LinearLayoutManager.VERTICAL
 		);
+
 		decoration.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(this, R.drawable.divider)));
 		binding.urlsRecyclerview.addItemDecoration(decoration);
-	}
 
-	@SuppressLint("NotifyDataSetChanged")
-	public void refreshUrls() {
-		// Ideally, only update the changed items
-		urlAdapter.notifyDataSetChanged();
 	}
 
 	private void loadUrisFromFile() {
+		urlsStr.clear();
 		String filePath = settingsManager.getRootStoragePath() + File.separator + "req.txt";
 
 		File file = new File(filePath);
@@ -101,6 +99,12 @@ public class DownloadActivity extends AppCompatActivity {
 		} catch (IOException e) {
 			showAlert("Error reading req.txt");
 		}
+
+		for (String urlStr : urlsStr) {
+			urlList.add(new Url(urlStr));
+		}
+
+		urlAdapter = new UrlAdapter(urlList);
 	}
 
 	private void downloadSelectedUrls() {
@@ -120,17 +124,20 @@ public class DownloadActivity extends AppCompatActivity {
 			myUtils.download(Uri.parse(url.url), new MyUtils.DownloadListener() {
 				@Override
 				public void onStart(Uri uri, long contentLength) {
-
+					url.size = contentLength;
 				}
 
 				@Override
 				public void onSuccess(File file, Headers headers) {
-					url.isDownloaded=true;
+					url.isDownloaded = true;
+					url.setProgress(100);
 				}
+
 				@Override
 				public void onProgress(double p) {
 					url.setProgress(p);
 				}
+
 				@Override
 				public void onFailure(Exception e) {
 					url.isDownloaded = false;
@@ -138,22 +145,37 @@ public class DownloadActivity extends AppCompatActivity {
 
 				@Override
 				public void onEnd(File file) {
-
 				}
 			});
 		}
 	}
 
 	private void calculateTotalSize() {
-		long totalSize = 0;
-		for (Url url : urlList) {
-//			url.size =
-			mainHandler.post(() -> {
-				urlAdapter.notifyItemChanged(urlList.indexOf(url)); // Update size in RecyclerView
-			});
+		if (!MyUtils.isNetworkAvailable) {
+			showAlert("No network available!");
+			return;
 		}
 
-		mainHandler.post(() -> binding.totalSizeTextview.setText("Total Size: " + totalSize + " bytes"));
+		myUtils.executorService.execute(()->{
+			AtomicLong totalSize = new AtomicLong(0);
+			for (Url url : urlList) {
+				Request request = new Request.Builder().head().url(url.url).build();
+				try {
+					Response response = myUtils.client.newCall(request).execute();
+					assert response.body() != null;
+					if (response.isSuccessful()) {
+						url.size = response.body().contentLength();
+						totalSize.addAndGet(url.size);
+					} else {
+						url.size = -1;
+					}
+					mainHandler.post(() -> urlAdapter.notifyItemChanged(urlList.indexOf(url)));
+				} catch (IOException e) {
+					Log.e(TAG, " ", e);
+				}
+			}
+			mainHandler.post(() -> binding.totalSizeTextview.setText("Total Size: " + totalSize + " bytes"));
+		});
 	}
 
 	private void initUI() {
@@ -161,12 +183,14 @@ public class DownloadActivity extends AppCompatActivity {
 
 		binding.refreshButton.setOnClickListener(v -> {
 			loadUrisFromFile();
-			initRecyclerView(); // Reload data from file and refresh RecyclerView
+			refresh();
 		});
 
 		binding.calcButton.setOnClickListener(v -> calculateTotalSize());
 
 		binding.downloadButton.setOnClickListener(v -> downloadSelectedUrls());
+
+		initRecyclerView();
 	}
 
 	@Override
@@ -176,6 +200,6 @@ public class DownloadActivity extends AppCompatActivity {
 	}
 
 	private void showAlert(String msg) {
-		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show(); // Use LENGTH_SHORT for less intrusive messages
+		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 	}
 }

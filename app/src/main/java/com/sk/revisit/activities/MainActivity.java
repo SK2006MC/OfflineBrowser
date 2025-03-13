@@ -22,8 +22,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.navigation.NavigationView;
+import com.sk.revisit.adapter.UrlsLogAdapter;
+import com.sk.revisit.data.UrlLog;
 import com.sk.revisit.jsconsole.JSAutoCompleteTextView;
 import com.sk.revisit.jsconsole.JSConsoleLogger;
 import com.sk.revisit.jsconsole.JSWebViewManager;
@@ -42,6 +45,7 @@ import com.sk.revisit.webview.MyWebViewClient;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -54,8 +58,9 @@ public class MainActivity extends AppCompatActivity {
 	MySettingsManager settingsManager;
 	private EditText urlEditText;
 	private WebView mainWebView;
-	private ScrollView jsConsoleScrollView,urlsLogSV;
-	private LinearLayout jsConsoleLayout, bg,urlsLogL;
+	private ScrollView jsConsoleScrollView;
+	private LinearLayout jsConsoleLayout;
+	private LinearLayout bg;
 	private JSAutoCompleteTextView jsInputTextView;
 	private ImageButton executeJsButton;
 	@SuppressLint("UseSwitchCompatOrMaterialCode")
@@ -65,8 +70,6 @@ public class MainActivity extends AppCompatActivity {
 	private MyUtils myUtils;
 	private ActivityMainBinding binding;
 	private ConnectivityManager.NetworkCallback networkCallback;
-	private UrlsLogAdapter urlsLogAdapter;
-	private List<UrlLog> urlsLog = new ArrayList<>();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-	@Override
+	@Override 
 	protected void onResume() {
 		super.onResume();
 		if (getIntent().getBooleanExtra("loadUrl", false)) {
@@ -161,15 +164,11 @@ public class MainActivity extends AppCompatActivity {
 
 		mainWebView = binding.myWebView;
 
-		NavJsBinding jsHeaderView = NavJsBinding.bind(binding.navJs.getHeaderView(0));
-		jsInputTextView = jsHeaderView.jsInput;
-		jsConsoleLayout = jsHeaderView.consoleLayout;
-		jsConsoleScrollView = jsHeaderView.consoleScrollView;
-		executeJsButton = jsHeaderView.executeJsBtn;
-		urlsLogsSV = jsHeaderView.urlsLogScrollView;
-		urlsLogL = jsHeaderView.urlsLogLayout;
-		
-		urlsLogL.setAdapter();
+		NavJsBinding jsConsole = binding.jsnav;
+		jsInputTextView = jsConsole.jsInput;
+		jsConsoleLayout = jsConsole.consoleLayout;
+		jsConsoleScrollView = jsConsole.consoleScrollView;
+		executeJsButton = jsConsole.executeJsBtn;
 	}
 
 	private void initNetworkChangeListener() {
@@ -287,7 +286,6 @@ public class MainActivity extends AppCompatActivity {
 		webSettings.setDomStorageEnabled(true);
 		webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
 		webSettings.setJavaScriptEnabled(true);
-		// should remove this line in production
 		webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 		webSettings.setUseWideViewPort(true);
 		// webSettings.setUserAgentString(); // Consider setting a custom User-Agent if needed
@@ -296,12 +294,13 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public void onBackPressed() {
 		DrawerLayout drawerLayout = binding.drawerLayout;
-		NavigationView mainNav = binding.myNav, JSNav = binding.navJs;
+		NavigationView mainNav = binding.myNav;
+		LinearLayout jsl = binding.jsnav.getRoot();
 		try {
 			if (drawerLayout.isDrawerOpen(mainNav)) {
 				drawerLayout.closeDrawer(mainNav);
-			} else if (drawerLayout.isDrawerOpen(JSNav)) {
-				drawerLayout.closeDrawer(JSNav);
+			} else if (drawerLayout.isDrawerOpen(jsl)) {
+				drawerLayout.closeDrawer(jsl);
 			} else if (mainWebView.canGoBack()) {
 				mainWebView.goBack();
 			} else {
